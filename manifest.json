@@ -1,0 +1,21 @@
+{
+  "name": "WageWise UK",
+  "short_name": "WageWise",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0f141c",
+  "theme_color": "#10141c",
+  "description": "Take-home pay estimator for 2025/26. PAYE, NI, Student Loans, region-aware.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

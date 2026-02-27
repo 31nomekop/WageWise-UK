@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>WageWise UK</title>
+  <meta name="theme-color" content="#10141c" />
+  <meta name="description" content="WageWise UK: take-home pay estimator for 2025/26. PAYE, NI, Student Loans, region-aware." />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">£</div>
+      <div>
+        <div class="title">WageWise UK</div>
+        <div class="subtitle">Take-home pay, clearly • 2025/26</div>
+      </div>
+    </div>
+    <button id="installBtn" class="ghost" hidden>Install</button>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>Inputs</h2>
+
+      <div class="grid">
+        <label class="field">
+          <span>Region</span>
+          <select id="region">
+            <option value="england" selected>England</option>
+            <option value="wales">Wales</option>
+            <option value="northernIreland">Northern Ireland</option>
+            <option value="scotland">Scotland</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Pay input</span>
+          <select id="mode">
+            <option value="annualSalary" selected>Annual salary</option>
+            <option value="hourly">Hourly rate</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="annualBox" class="grid">
+        <label class="field">
+          <span>Annual salary (£)</span>
+          <input id="annualSalary" inputmode="decimal" placeholder="e.g. 30000" />
+        </label>
+      </div>
+
+      <div id="hourlyBox" class="grid" hidden>
+        <label class="field">
+          <span>Hourly rate (£)</span>
+          <input id="hourlyRate" inputmode="decimal" placeholder="e.g. 12.21" />
+        </label>
+        <label class="field">
+          <span>Hours per week</span>
+          <input id="hoursPerWeek" inputmode="decimal" placeholder="e.g. 16" />
+        </label>
+      </div>
+
+      <div class="grid">
+        <label class="field">
+          <span>Tax code</span>
+          <input id="taxCode" placeholder="e.g. 1257L, BR, D0, NT" />
+        </label>
+
+        <label class="field">
+          <span>Pension %</span>
+          <input id="pensionPercent" inputmode="decimal" placeholder="e.g. 5" />
+        </label>
+      </div>
+
+      <label class="toggle">
+        <input id="salarySacrifice" type="checkbox" />
+        <span>
+          <strong>Salary sacrifice pension</strong>
+          <small>If enabled, pension reduces Income Tax, NI, and Student Loan bases.</small>
+        </span>
+      </label>
+
+      <label class="field">
+        <span>Student loan</span>
+        <select id="studentLoan">
+          <option value="none" selected>None</option>
+          <option value="plan1">Plan 1</option>
+          <option value="plan2">Plan 2</option>
+          <option value="plan4">Plan 4</option>
+          <option value="plan5">Plan 5</option>
+          <option value="postgraduate">Postgraduate</option>
+        </select>
+      </label>
+
+      <div class="actions">
+        <button id="calcBtn" class="primary">Calculate</button>
+        <button id="resetBtn" class="ghost">Reset</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Results</h2>
+      <div id="results" class="results">
+        <div class="hint">Enter your details and tap <strong>Calculate</strong>.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Important</h2>
+      <p class="fine">
+        This is an estimator for the <strong>2025/26 UK tax year</strong> (PAYE). Real payslips can differ due to payroll periods,
+        benefits, tax code adjustments, and employer pension rules.
+      </p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>WageWise UK • PWA test build</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
