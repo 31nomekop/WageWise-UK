@@ -110,3 +110,15 @@ button.ghost{background: transparent}
 .hint{color:var(--muted); font-size:14px}
 .fine{color:var(--muted); font-size:13px; line-height:1.45}
 .foot{padding: 18px 16px; color: rgba(242,245,247,.55); text-align:center; font-size:12px}
+.help{
+  margin: 10px 0 12px 0;
+  padding: 10px 12px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  background: rgba(0,0,0,.18);
+}
+.help summary{
+  cursor: pointer;
+  font-weight: 700;
+}
+.help p{ margin: 8px 0 0 0; }
