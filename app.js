@@ -288,7 +288,82 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
+// --- Salary Finder (from payslips) ---
+function sfMultiplier(freq){
+  if(freq === 'weekly') return 52;
+  if(freq === 'fortnightly') return 26;
+  if(freq === 'fourWeekly') return 13;
+  if(freq === 'monthly') return 12;
+  return 52;
+}
 
+function sfReadPayslips(){
+  const freq = document.getElementById('sfFrequency')?.value || 'weekly';
+  const nums = ['sfP1','sfP2','sfP3','sfP4']
+    .map(id => parseMoney(document.getElementById(id)?.value))
+    .filter(v => v != null && v >= 0);
+  return { freq, nums };
+}
+
+function sfEstimate(){
+  const out = document.getElementById('sfOutput');
+  const applyBtn = document.getElementById('sfApplyBtn');
+
+  if(!out || !applyBtn) return;
+
+  const { freq, nums } = sfReadPayslips();
+
+  if(nums.length === 0){
+    out.innerHTML = '<div class="hint">Enter at least <strong>1</strong> payslip gross value.</div>';
+    applyBtn.disabled = true;
+    return null;
+  }
+
+  const avg = nums.reduce((a,b)=>a+b,0) / nums.length;
+  const annual = round2(avg * sfMultiplier(freq));
+
+  out.innerHTML = `
+    <div class="row"><div>Average gross per payslip</div><div><strong>${currencyGBP(round2(avg))}</strong></div></div>
+    <div class="row"><div>Estimated annual gross salary</div><div><strong>${currencyGBP(annual)}</strong></div></div>
+    <div class="hint">Tip: tap <strong>Use as annual salary</strong> to auto-fill the calculator.</div>
+  `;
+
+  applyBtn.disabled = false;
+  return annual;
+}
+
+function sfApplyToCalculator(annual){
+  if(annual == null) return;
+
+  // set calculator to annual mode and fill salary
+  document.getElementById('mode').value = 'annualSalary';
+  syncModeUI();
+
+  const annualInput = document.getElementById('annualSalary');
+  annualInput.value = String(annual);
+
+  // scroll to inputs so user sees it changed
+  const inputsCard = document.querySelector('.card');
+  if(inputsCard) inputsCard.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// Wire buttons (safe if section not present)
+const sfEstimateBtn = document.getElementById('sfEstimateBtn');
+const sfApplyBtn = document.getElementById('sfApplyBtn');
+
+let sfLastAnnual = null;
+
+if(sfEstimateBtn){
+  sfEstimateBtn.addEventListener('click', () => {
+    sfLastAnnual = sfEstimate();
+  });
+}
+
+if(sfApplyBtn){
+  sfApplyBtn.addEventListener('click', () => {
+    sfApplyToCalculator(sfLastAnnual);
+  });
+}
 // boot
 resetUI();
 syncModeUI();
