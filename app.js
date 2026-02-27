@@ -183,49 +183,10 @@ function compute(input){
 
 function renderResults(b){
   const el = document.getElementById('results');
+  if(!el) return;
+
+  // Build result rows
   el.innerHTML = '';
-  // ---- UX Enhancements ----
-
-const totalDeductions = o.tax + o.ni + o.sl + o.pension;
-const effectiveRate = o.gross > 0 
-  ? ((totalDeductions / o.gross) * 100).toFixed(1) 
-  : 0;
-
-const effectiveRateEl = document.getElementById("effectiveRate");
-if (effectiveRateEl) {
-  effectiveRateEl.textContent = `${effectiveRate}%`;
-}
-
-// Breakdown bar
-const breakdownBar = document.getElementById("breakdownBar");
-const barLegend = document.getElementById("barLegend");
-
-if (breakdownBar && barLegend && o.gross > 0) {
-  const segments = [
-    { label: "Tax", value: o.tax, color: "#ef4444" },
-    { label: "NI", value: o.ni, color: "#f97316" },
-    { label: "Student Loan", value: o.sl, color: "#eab308" },
-    { label: "Pension", value: o.pension, color: "#8b5cf6" },
-    { label: "Take Home", value: o.takeHomeAnnual, color: "#22c55e" }
-  ];
-
-  breakdownBar.innerHTML = "";
-  barLegend.innerHTML = "";
-
-  segments.forEach(seg => {
-    const percent = (seg.value / o.gross) * 100;
-
-    const div = document.createElement("div");
-    div.style.width = percent + "%";
-    div.style.background = seg.color;
-    breakdownBar.appendChild(div);
-
-    const legendItem = document.createElement("span");
-    legendItem.innerHTML = `<span style="background:${seg.color};width:10px;height:10px;display:inline-block;border-radius:3px;margin-right:6px;"></span>${seg.label}`;
-    barLegend.appendChild(legendItem);
-  });
-}
-
   const makeRow = (label, value, strong=false) => {
     const r = document.createElement('div');
     r.className = 'row';
@@ -241,34 +202,67 @@ if (breakdownBar && barLegend && o.gross > 0) {
   el.appendChild(makeRow('Take-home (annual)', currencyGBP(b.netAnnual), true));
   el.appendChild(makeRow('Take-home (monthly)', currencyGBP(b.netMonthly), true));
   el.appendChild(makeRow('Take-home (weekly)', currencyGBP(b.netWeekly), true));
-}
 
-function getInputFromUI(){
-  const region = document.getElementById('region').value;
-  const mode = document.getElementById('mode').value;
+  // ---- UX Enhancements (wired to b) ----
+  const gross = b.grossAnnual || 0;
+  const tax = b.incomeTaxAnnual || 0;
+  const ni = b.nationalInsuranceAnnual || 0;
+  const sl = b.studentLoanAnnual || 0;
+  const pension = b.pensionAnnual || 0;
+  const takeHome = b.netAnnual || 0;
 
-  const taxCode = (document.getElementById('taxCode').value || '1257L').trim() || '1257L';
-  const pensionPercent = parseMoney(document.getElementById('pensionPercent').value) ?? 0;
-  const salarySacrifice = document.getElementById('salarySacrifice').checked;
-  const studentLoan = document.getElementById('studentLoan').value;
-
-  let grossAnnual = 0;
-  if(mode === 'annualSalary'){
-    const annualSalary = parseMoney(document.getElementById('annualSalary').value) ?? 0;
-    grossAnnual = annualSalary;
-  } else {
-    const hourlyRate = parseMoney(document.getElementById('hourlyRate').value) ?? 0;
-    const hoursPerWeek = parseMoney(document.getElementById('hoursPerWeek').value) ?? 0;
-    grossAnnual = hourlyRate * hoursPerWeek * 52;
+  // Effective deduction rate
+  const effectiveRateEl = document.getElementById("effectiveRate");
+  if (effectiveRateEl) {
+    if (gross > 0) {
+      const totalDeductions = tax + ni + sl + pension;
+      const effectiveRate = (totalDeductions / gross) * 100;
+      effectiveRateEl.textContent = effectiveRate.toFixed(1) + "%";
+    } else {
+      effectiveRateEl.textContent = "—";
+    }
   }
 
-  return {
-    region, mode, taxCode,
-    pensionPercent, salarySacrifice, studentLoan,
-    grossAnnual,
-  };
-}
+  // Breakdown bar + legend
+  const breakdownBar = document.getElementById("breakdownBar");
+  const barLegend = document.getElementById("barLegend");
 
+  if (breakdownBar && barLegend) {
+    breakdownBar.innerHTML = "";
+    barLegend.innerHTML = "";
+
+    if (gross > 0) {
+      const segments = [
+        { label: "Tax", value: tax, color: "rgba(255,255,255,.18)" },
+        { label: "NI", value: ni, color: "rgba(255,255,255,.12)" },
+        { label: "Student Loan", value: sl, color: "rgba(255,255,255,.10)" },
+        { label: "Pension", value: pension, color: "rgba(86,220,174,.20)" },
+        { label: "Take-home", value: takeHome, color: "rgba(86,220,174,.55)" }
+      ];
+
+      for (const seg of segments) {
+        const pct = Math.max(0, (seg.value / gross) * 100);
+
+        const div = document.createElement("div");
+        div.className = "barSeg";
+        div.style.width = pct + "%";
+        div.style.background = seg.color;
+        breakdownBar.appendChild(div);
+
+        const item = document.createElement("div");
+        item.className = "legendItem";
+        item.innerHTML = `
+          <div class="legendLeft">
+            <span class="legendSwatch" style="background:${seg.color}"></span>
+            <span>${seg.label}</span>
+          </div>
+          <div><strong>${currencyGBP(seg.value)}</strong></div>
+        `;
+        barLegend.appendChild(item);
+      }
+    }
+  }
+}
 function resetUI(){
   document.getElementById('region').value = 'england';
   document.getElementById('mode').value = 'annualSalary';
