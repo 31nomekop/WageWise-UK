@@ -160,8 +160,9 @@ function compute(input){
   const pensionPct = clamp(input.pensionPercent, 0, 100);
   const pension = round2(gross * (pensionPct / 100));
 
-  const adjustedNetForTax = Math.max(0, gross - pension);
-  const niAndLoanBase = Math.max(0, input.salarySacrifice ? (gross - pension) : gross);
+  const taxBase = Math.max(0, input.salarySacrifice ? (gross - pension) : gross);
+  const adjustedNetForTax = taxBase;
+  const niAndLoanBase = taxBase;
 
   const tax = incomeTaxAnnual(input.region, adjustedNetForTax, input.taxCode);
   const ni = nationalInsuranceAnnual(niAndLoanBase);
