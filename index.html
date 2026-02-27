@@ -1,251 +1,54 @@
-<!doctype html>
-<html lang="en-GB">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>WageWise UK</title>
-  <meta name="theme-color" content="#10141c" />
-  <meta name="description" content="WageWise UK: take-home pay estimator for 2025/26. PAYE, NI, Student Loans, region-aware." />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WageWise UK</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="mark" aria-hidden="true">£</div>
-      <div>
-        <div class="title">WageWise UK</div>
-        <div class="subtitle">Take-home pay, clearly • 2025/26</div>
-        <div class="badge" id="taxYearBadge">Updated for 2025/26</div>
-      </div>
-    </div>
-    <button id="installBtn" class="ghost" hidden>Install</button>
-  </header>
 
-  <main class="wrap">
-    <section class="card" id="inputsCard">
-      <h2>Inputs</h2>
+<header>
+  <h1>WageWise UK</h1>
+  <p class="tag">Take-home pay, clearly • Updated for 2025/26</p>
+</header>
 
-      <div class="grid">
-        <label class="field">
-          <span>Region</span>
-          <select id="region">
-            <option value="england" selected>England</option>
-            <option value="wales">Wales</option>
-            <option value="northernIreland">Northern Ireland</option>
-            <option value="scotland">Scotland</option>
-          </select>
-        </label>
+<section class="card">
+  <h2>Inputs</h2>
+  <label>Annual salary (£)</label>
+  <input id="annualSalary" type="number" placeholder="e.g. 30000">
 
-        <label class="field">
-          <span>Pay input</span>
-          <select id="mode">
-            <option value="annualSalary" selected>Annual salary</option>
-            <option value="hourly">Hourly rate</option>
-          </select>
-        </label>
-      </div>
+  <label>Pension %</label>
+  <input id="pensionPercent" type="number" placeholder="e.g. 5">
 
-      <div id="annualBox" class="grid">
-        <label class="field">
-          <span>Annual salary (£)</span>
-          <input id="annualSalary" inputmode="decimal" placeholder="e.g. 30000" />
-        </label>
-      </div>
+  <label>
+    <input type="checkbox" id="salarySacrifice">
+    Salary sacrifice pension
+  </label>
 
-      <div id="hourlyBox" class="grid" hidden>
-        <label class="field">
-          <span>Hourly rate (£)</span>
-          <input id="hourlyRate" inputmode="decimal" placeholder="e.g. 12.21" />
-        </label>
-        <label class="field">
-          <span>Hours per week</span>
-          <input id="hoursPerWeek" inputmode="decimal" placeholder="e.g. 16" />
-        </label>
-      </div>
+  <button id="calcBtn">Calculate</button>
+</section>
 
-      <div class="grid">
-        <label class="field">
-          <span>Tax code</span>
-          <input id="taxCode" placeholder="e.g. 1257L, BR, D0, D1, NT" value="1257L" />
-        </label>
+<section class="card">
+  <h2>Results</h2>
+  <div id="results">Enter details and tap Calculate.</div>
 
-        <label class="field">
-          <span>Pension %</span>
-          <input id="pensionPercent" inputmode="decimal" placeholder="e.g. 5" />
-        </label>
-      </div>
+  <div class="rateWrap">
+    <div>Effective deduction rate</div>
+    <strong id="effectiveRate">—</strong>
+  </div>
 
-      <label class="toggle">
-        <input id="salarySacrifice" type="checkbox" />
-        <span>
-          <strong>Salary sacrifice pension</strong>
-          <small>If enabled, pension reduces Income Tax, NI, and Student Loan bases.</small>
-        </span>
-      </label>
+  <div class="barWrap">
+    <div id="breakdownBar" class="bar"></div>
+  </div>
 
-      <label class="field">
-        <span>Student loan</span>
-        <select id="studentLoan">
-          <option value="none" selected>None</option>
-          <option value="plan1">Plan 1</option>
-          <option value="plan2">Plan 2</option>
-          <option value="plan4">Plan 4</option>
-          <option value="plan5">Plan 5</option>
-          <option value="postgraduate">Postgraduate</option>
-        </select>
-      </label>
+  <div class="copyRow">
+    <button id="copyMonthlyBtn">Copy monthly</button>
+  </div>
+</section>
 
-      <div class="actions">
-        <button id="calcBtn" class="primary" type="button">Calculate</button>
-        <button id="resetBtn" class="ghost" type="button">Reset</button>
-      </div>
-    </section>
+<div id="toast" class="toast"></div>
 
-    <section class="card" id="salaryFinder">
-      <h2>Salary Finder (from payslips)</h2>
-
-      <p class="fine">
-        This estimates your <strong>annual gross salary</strong> from recent payslips.
-        Useful when forms ask “annual salary” but you’re paid weekly/fortnightly.
-      </p>
-
-      <details class="help">
-        <summary>Help: What number do I enter?</summary>
-        <p class="fine">
-          Enter the <strong>Gross pay</strong> shown on your payslip (before tax/NI). If you only know Net pay, the estimate will not match salary forms and can be misleading.
-        </p>
-        <p class="fine">
-          If your pays includes overtime/bonuses, using 4 payslips gives a better average, but it’s still an estimate.
-        </p>
-      </details>
-
-      <div class="grid">
-        <label class="field">
-          <span>Pay frequency</span>
-          <select id="sfFrequency">
-            <option value="weekly" selected>Weekly</option>
-            <option value="fortnightly">Fortnightly / Bi-weekly</option>
-            <option value="fourWeekly">4-weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span>Gross pay (Payslip 1)</span>
-          <input id="sfP1" inputmode="decimal" placeholder="e.g. 420.50" />
-        </label>
-
-        <label class="field">
-          <span>Gross pay (Payslip 2)</span>
-          <input id="sfP2" inputmode="decimal" placeholder="e.g. 398.10" />
-        </label>
-
-        <label class="field">
-          <span>Gross pay (Payslip 3)</span>
-          <input id="sfP3" inputmode="decimal" placeholder="e.g. 455.00" />
-        </label>
-
-        <label class="field">
-          <span>Gross pay (Payslip 4)</span>
-          <input id="sfP4" inputmode="decimal" placeholder="e.g. 410.25" />
-        </label>
-      </div>
-
-      <div class="actions">
-        <button id="sfEstimateBtn" class="primary" type="button">Estimate annual salary</button>
-        <button id="sfApplyBtn" class="ghost" type="button" disabled>Use as annual salary</button>
-        <button id="sfClearBtn" class="ghost" type="button">Clear</button>
-      </div>
-
-      <div id="sfOutput" class="results">
-        <div class="hint">Add up to 4 payslips, then tap <strong>Estimate</strong>.</div>
-      </div>
-
-      <p class="fine">
-        Disclaimer: this is an estimate based on the payslips you enter. It does not account for unpaid leave, irregular bonuses, or changes in hours.
-      </p>
-    </section>
-
-    <section class="card" id="resultsCard">
-      <h2>Results</h2>
-
-      <div id="results" class="results">
-        <div class="hint">Enter your details and tap <strong>Calculate</strong>.</div>
-      </div>
-
-      <div class="actions">
-        <button id="copyMonthlyBtn" class="ghost" type="button">Copy monthly</button>
-        <button id="copyAnnualBtn" class="ghost" type="button">Copy annual</button>
-        <button id="copyWeeklyBtn" class="ghost" type="button">Copy weekly</button>
-      </div>
-
-      <div id="uxExtras" class="ux-extras">
-        <div class="row">
-          <div>Effective deduction rate</div>
-          <div><strong id="effectiveRate">—</strong></div>
-        </div>
-
-        <div class="barWrap">
-          <div class="bar" id="breakdownBar" aria-label="Breakdown bar"></div>
-          <div class="barLegend" id="barLegend"></div>
-        </div>
-
-        <details class="help">
-          <summary>Scenarios (save / load)</summary>
-
-          <div class="grid">
-            <label class="field">
-              <span>Scenario name</span>
-              <input id="scenarioName" placeholder="e.g. Full-time / Overtime week" />
-            </label>
-
-            <div class="field">
-              <span>&nbsp;</span>
-              <div class="actions">
-                <button id="saveScenarioBtn" class="primary" type="button">Save</button>
-                <button id="deleteScenarioBtn" class="ghost" type="button">Delete</button>
-              </div>
-            </div>
-
-            <label class="field">
-              <span>Saved scenarios</span>
-              <select id="scenarioSelect"></select>
-            </label>
-
-            <div class="field">
-              <span>&nbsp;</span>
-              <div class="actions">
-                <button id="loadScenarioBtn" class="ghost" type="button">Load</button>
-              </div>
-            </div>
-          </div>
-
-          <p class="fine">Saved on this device only. Nothing is uploaded.</p>
-        </details>
-      </div>
-
-      <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    </section>
-
-    <section class="card">
-      <h2>Important</h2>
-      <p class="fine">
-        This is an estimator for the <strong>2025/26 UK tax year</strong> (PAYE). Real payslips can differ due to payroll periods,
-        benefits, tax code adjustments, and employer pension rules.
-      </p>
-      <p class="fine">
-        Privacy: this version runs fully on your device. No data is sent anywhere.
-      </p>
-    </section>
-  </main>
-
-  <footer class="foot">
-    <span>WageWise UK • PWA</span>
-  </footer>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
