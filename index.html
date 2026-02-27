@@ -25,7 +25,7 @@
   </header>
 
   <main class="wrap">
-    <section class="card">
+    <section class="card" id="inputsCard">
       <h2>Inputs</h2>
 
       <div class="grid">
@@ -69,7 +69,7 @@
       <div class="grid">
         <label class="field">
           <span>Tax code</span>
-          <input id="taxCode" placeholder="e.g. 1257L, BR, D0, NT" />
+          <input id="taxCode" placeholder="e.g. 1257L, BR, D0, D1, NT" value="1257L" />
         </label>
 
         <label class="field">
@@ -99,12 +99,12 @@
       </label>
 
       <div class="actions">
-        <button id="calcBtn" class="primary">Calculate</button>
-        <button id="resetBtn" class="ghost">Reset</button>
+        <button id="calcBtn" class="primary" type="button">Calculate</button>
+        <button id="resetBtn" class="ghost" type="button">Reset</button>
       </div>
     </section>
 
-        <section class="card" id="salaryFinder">
+    <section class="card" id="salaryFinder">
       <h2>Salary Finder (from payslips)</h2>
 
       <p class="fine">
@@ -115,8 +115,7 @@
       <details class="help">
         <summary>Help: What number do I enter?</summary>
         <p class="fine">
-          Enter the <strong>Gross pay</strong> shown on your payslip (before tax/NI).
-          If you only know Net pay, the estimate will not match salary forms and can be misleading.
+          Enter the <strong>Gross pay</strong> shown on your payslip (before tax/NI). If you only know Net pay, the estimate will not match salary forms and can be misleading.
         </p>
         <p class="fine">
           If your pays includes overtime/bonuses, using 4 payslips gives a better average, but it’s still an estimate.
@@ -156,8 +155,9 @@
       </div>
 
       <div class="actions">
-        <button id="sfEstimateBtn" class="primary">Estimate annual salary</button>
-        <button id="sfApplyBtn" class="ghost" disabled>Use as annual salary</button>
+        <button id="sfEstimateBtn" class="primary" type="button">Estimate annual salary</button>
+        <button id="sfApplyBtn" class="ghost" type="button" disabled>Use as annual salary</button>
+        <button id="sfClearBtn" class="ghost" type="button">Clear</button>
       </div>
 
       <div id="sfOutput" class="results">
@@ -165,71 +165,70 @@
       </div>
 
       <p class="fine">
-        Disclaimer: this is an estimate based on the payslips you enter. It does not account for unpaid leave, irregular bonuses,
-        or changes in hours.
+        Disclaimer: this is an estimate based on the payslips you enter. It does not account for unpaid leave, irregular bonuses, or changes in hours.
       </p>
     </section>
-    <section class="card">
-  <h2>Results</h2>
 
-  <!-- JS will render result rows into this -->
-  <div id="results" class="results">
-    <div class="hint">Enter your details and tap <strong>Calculate</strong>.</div>
-  </div>
+    <section class="card" id="resultsCard">
+      <h2>Results</h2>
 
-  <div class="actions">
-    <button id="copyMonthlyBtn" class="ghost" type="button">Copy monthly</button>
-    <button id="copyAnnualBtn" class="ghost" type="button">Copy annual</button>
-    <button id="copyWeeklyBtn" class="ghost" type="button">Copy weekly</button>
-  </div>
-
-  <div id="uxExtras" class="ux-extras">
-    <div class="row">
-      <div>Effective deduction rate</div>
-      <div><strong id="effectiveRate">—</strong></div>
-    </div>
-
-    <div class="barWrap">
-      <div class="bar" id="breakdownBar" aria-label="Breakdown bar"></div>
-      <div class="barLegend" id="barLegend"></div>
-    </div>
-
-    <details class="help">
-      <summary>Scenarios (save / load)</summary>
-
-      <div class="grid">
-        <label class="field">
-          <span>Scenario name</span>
-          <input id="scenarioName" placeholder="e.g. Full-time / Overtime week" />
-        </label>
-
-        <div class="field">
-          <span>&nbsp;</span>
-          <div class="actions">
-            <button id="saveScenarioBtn" class="primary" type="button">Save</button>
-            <button id="deleteScenarioBtn" class="ghost" type="button">Delete</button>
-          </div>
-        </div>
-
-        <label class="field">
-          <span>Saved scenarios</span>
-          <select id="scenarioSelect"></select>
-        </label>
-
-        <div class="field">
-          <span>&nbsp;</span>
-          <div class="actions">
-            <button id="loadScenarioBtn" class="ghost" type="button">Load</button>
-          </div>
-        </div>
+      <div id="results" class="results">
+        <div class="hint">Enter your details and tap <strong>Calculate</strong>.</div>
       </div>
 
-      <p class="fine">Saved on this device only. Nothing is uploaded.</p>
-    </details>
-  </div>
+      <div class="actions">
+        <button id="copyMonthlyBtn" class="ghost" type="button">Copy monthly</button>
+        <button id="copyAnnualBtn" class="ghost" type="button">Copy annual</button>
+        <button id="copyWeeklyBtn" class="ghost" type="button">Copy weekly</button>
+      </div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-</section>
+      <div id="uxExtras" class="ux-extras">
+        <div class="row">
+          <div>Effective deduction rate</div>
+          <div><strong id="effectiveRate">—</strong></div>
+        </div>
+
+        <div class="barWrap">
+          <div class="bar" id="breakdownBar" aria-label="Breakdown bar"></div>
+          <div class="barLegend" id="barLegend"></div>
+        </div>
+
+        <details class="help">
+          <summary>Scenarios (save / load)</summary>
+
+          <div class="grid">
+            <label class="field">
+              <span>Scenario name</span>
+              <input id="scenarioName" placeholder="e.g. Full-time / Overtime week" />
+            </label>
+
+            <div class="field">
+              <span>&nbsp;</span>
+              <div class="actions">
+                <button id="saveScenarioBtn" class="primary" type="button">Save</button>
+                <button id="deleteScenarioBtn" class="ghost" type="button">Delete</button>
+              </div>
+            </div>
+
+            <label class="field">
+              <span>Saved scenarios</span>
+              <select id="scenarioSelect"></select>
+            </label>
+
+            <div class="field">
+              <span>&nbsp;</span>
+              <div class="actions">
+                <button id="loadScenarioBtn" class="ghost" type="button">Load</button>
+              </div>
+            </div>
+          </div>
+
+          <p class="fine">Saved on this device only. Nothing is uploaded.</p>
+        </details>
+      </div>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </section>
 
     <section class="card">
       <h2>Important</h2>
@@ -237,11 +236,14 @@
         This is an estimator for the <strong>2025/26 UK tax year</strong> (PAYE). Real payslips can differ due to payroll periods,
         benefits, tax code adjustments, and employer pension rules.
       </p>
+      <p class="fine">
+        Privacy: this version runs fully on your device. No data is sent anywhere.
+      </p>
     </section>
   </main>
 
   <footer class="foot">
-    <span>WageWise UK • PWA test build</span>
+    <span>WageWise UK • PWA</span>
   </footer>
 
   <script src="app.js"></script>

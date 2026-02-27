@@ -1,4 +1,4 @@
-const CACHE = 'wagewiseuk-pwa-v10';
+const CACHE = 'wagewiseuk-pwa-fresh-v1';
 const ASSETS = [
   './',
   './index.html',
