@@ -184,6 +184,47 @@ function compute(input){
 function renderResults(b){
   const el = document.getElementById('results');
   el.innerHTML = '';
+  // ---- UX Enhancements ----
+
+const totalDeductions = o.tax + o.ni + o.sl + o.pension;
+const effectiveRate = o.gross > 0 
+  ? ((totalDeductions / o.gross) * 100).toFixed(1) 
+  : 0;
+
+const effectiveRateEl = document.getElementById("effectiveRate");
+if (effectiveRateEl) {
+  effectiveRateEl.textContent = `${effectiveRate}%`;
+}
+
+// Breakdown bar
+const breakdownBar = document.getElementById("breakdownBar");
+const barLegend = document.getElementById("barLegend");
+
+if (breakdownBar && barLegend && o.gross > 0) {
+  const segments = [
+    { label: "Tax", value: o.tax, color: "#ef4444" },
+    { label: "NI", value: o.ni, color: "#f97316" },
+    { label: "Student Loan", value: o.sl, color: "#eab308" },
+    { label: "Pension", value: o.pension, color: "#8b5cf6" },
+    { label: "Take Home", value: o.takeHomeAnnual, color: "#22c55e" }
+  ];
+
+  breakdownBar.innerHTML = "";
+  barLegend.innerHTML = "";
+
+  segments.forEach(seg => {
+    const percent = (seg.value / o.gross) * 100;
+
+    const div = document.createElement("div");
+    div.style.width = percent + "%";
+    div.style.background = seg.color;
+    breakdownBar.appendChild(div);
+
+    const legendItem = document.createElement("span");
+    legendItem.innerHTML = `<span style="background:${seg.color};width:10px;height:10px;display:inline-block;border-radius:3px;margin-right:6px;"></span>${seg.label}`;
+    barLegend.appendChild(legendItem);
+  });
+}
 
   const makeRow = (label, value, strong=false) => {
     const r = document.createElement('div');
