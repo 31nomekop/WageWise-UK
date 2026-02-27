@@ -103,11 +103,77 @@
       </div>
     </section>
 
+        <section class="card" id="salaryFinder">
+      <h2>Salary Finder (from payslips)</h2>
+
+      <p class="fine">
+        This estimates your <strong>annual gross salary</strong> from recent payslips.
+        Useful when forms ask “annual salary” but you’re paid weekly/fortnightly.
+      </p>
+
+      <details class="help">
+        <summary>Help: What number do I enter?</summary>
+        <p class="fine">
+          Enter the <strong>Gross pay</strong> shown on your payslip (before tax/NI).
+          If you only know Net pay, the estimate will not match salary forms and can be misleading.
+        </p>
+        <p class="fine">
+          If your pays includes overtime/bonuses, using 4 payslips gives a better average, but it’s still an estimate.
+        </p>
+      </details>
+
+      <div class="grid">
+        <label class="field">
+          <span>Pay frequency</span>
+          <select id="sfFrequency">
+            <option value="weekly" selected>Weekly</option>
+            <option value="fortnightly">Fortnightly / Bi-weekly</option>
+            <option value="fourWeekly">4-weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Gross pay (Payslip 1)</span>
+          <input id="sfP1" inputmode="decimal" placeholder="e.g. 420.50" />
+        </label>
+
+        <label class="field">
+          <span>Gross pay (Payslip 2)</span>
+          <input id="sfP2" inputmode="decimal" placeholder="e.g. 398.10" />
+        </label>
+
+        <label class="field">
+          <span>Gross pay (Payslip 3)</span>
+          <input id="sfP3" inputmode="decimal" placeholder="e.g. 455.00" />
+        </label>
+
+        <label class="field">
+          <span>Gross pay (Payslip 4)</span>
+          <input id="sfP4" inputmode="decimal" placeholder="e.g. 410.25" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="sfEstimateBtn" class="primary">Estimate annual salary</button>
+        <button id="sfApplyBtn" class="ghost" disabled>Use as annual salary</button>
+      </div>
+
+      <div id="sfOutput" class="results">
+        <div class="hint">Add up to 4 payslips, then tap <strong>Estimate</strong>.</div>
+      </div>
+
+      <p class="fine">
+        Disclaimer: this is an estimate based on the payslips you enter. It does not account for unpaid leave, irregular bonuses,
+        or changes in hours.
+      </p>
+    </section>
     <section class="card">
       <h2>Results</h2>
       <div id="results" class="results">
         <div class="hint">Enter your details and tap <strong>Calculate</strong>.</div>
       </div>
+      
     </section>
 
     <section class="card">
