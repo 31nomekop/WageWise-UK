@@ -122,3 +122,34 @@ button.ghost{background: transparent}
   font-weight: 700;
 }
 .help p{ margin: 8px 0 0 0; }
+/* ===== Readability Tidy Pass ===== */
+
+.card {
+  background: rgba(20, 28, 38, 0.88); /* slightly lighter */
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+.fine {
+  opacity: 0.88; /* was slightly too muted */
+}
+
+.hint {
+  opacity: 0.85;
+}
+
+.results .row {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 6px 0;
+}
+
+.primary {
+  background: #2bb673;
+  color: #0d1117;
+  font-weight: 600;
+}
+
+.ghost {
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.05);
+}
