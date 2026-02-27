@@ -367,3 +367,359 @@ if(sfApplyBtn){
 // boot
 resetUI();
 syncModeUI();
+// ===== UX Enhancements (safe, post-render) =====
+(function(){
+  const $ = (id) => document.getElementById(id);
+
+  function toast(msg){
+    const el = $('toast');
+    if(!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=> el.classList.remove('show'), 1400);
+  }
+
+  function parseGBP(text){
+    if(!text) return null;
+    const n = String(text).replace(/[^0-9.\-]/g,'');
+    if(!n) return null;
+    const v = Number(n);
+    return Number.isFinite(v) ? v : null;
+  }
+
+  // Reads values from the Results card (no need to modify tax logic)
+  function readResultsFromDOM(){
+    const res = $('results');
+    if(!res) return null;
+
+    const rows = Array.from(res.querySelectorAll('.row'));
+    if(rows.length === 0) return null;
+
+    const data = {};
+    for(const r of rows){
+      const label = (r.children[0]?.textContent || '').trim().toLowerCase();
+      const valueText = r.children[1]?.textContent || '';
+      const v = parseGBP(valueText);
+
+      if(label.includes('gross')) data.gross = v;
+      if(label.includes('income tax')) data.tax = v;
+      if(label.includes('national insurance')) data.ni = v;
+      if(label.includes('student loan')) data.loan = v;
+      if(label.includes('pension')) data.pension = v;
+      if(label.includes('take-home (annual)')) data.netAnnual = v;
+      if(label.includes('take-home (monthly)')) data.netMonthly = v;
+      if(label.includes('take-home (weekly)')) data.netWeekly = v;
+    }
+
+    // only meaningful if we have gross + at least netAnnual
+    if(!Number.isFinite(data.gross) || !Number.isFinite(data.netAnnual)) return null;
+    return data;
+  }
+
+  function applyTakeHomeFocus(){
+    const res = $('results');
+    if(!res) return;
+    const rows = Array.from(res.querySelectorAll('.row'));
+    for(const r of rows){
+      const label = (r.children[0]?.textContent || '').toLowerCase();
+      r.classList.toggle('takeHomeFocus', label.includes('take-home (monthly)'));
+    }
+  }
+
+  // Basic breakdown bar (segments) + legend
+  function renderBreakdown(data){
+    const bar = $('breakdownBar');
+    const legend = $('barLegend');
+    const rateEl = $('effectiveRate');
+    if(!bar || !legend || !rateEl || !data) return;
+
+    const gross = data.gross || 0;
+    const tax = data.tax || 0;
+    const ni = data.ni || 0;
+    const loan = data.loan || 0;
+    const pension = data.pension || 0;
+    const net = data.netAnnual || 0;
+
+    const deductions = (tax + ni + loan + pension);
+    const eff = gross > 0 ? (deductions / gross) * 100 : 0;
+    rateEl.textContent = gross > 0 ? `${eff.toFixed(1)}%` : '—';
+
+    // prevent weird negatives
+    const parts = [
+      { key:'Tax', value: Math.max(0, tax), color: 'rgba(255,255,255,.18)' },
+      { key:'NI', value: Math.max(0, ni), color: 'rgba(255,255,255,.12)' },
+      { key:'Loan', value: Math.max(0, loan), color: 'rgba(255,255,255,.10)' },
+      { key:'Pension', value: Math.max(0, pension), color: 'rgba(86,220,174,.20)' },
+      { key:'Take-home', value: Math.max(0, net), color: 'rgba(86,220,174,.55)' },
+    ];
+
+    // build bar
+    bar.innerHTML = '';
+    for(const p of parts){
+      const pct = gross > 0 ? (p.value / gross) * 100 : 0;
+      const seg = document.createElement('div');
+      seg.className = 'barSeg';
+      seg.style.width = `${Math.max(0, pct)}%`;
+      seg.style.background = p.color;
+      bar.appendChild(seg);
+    }
+
+    // legend
+    const fmt = (n) => (Number.isFinite(n) ? `£${n.toFixed(2)}` : '—');
+    legend.innerHTML = '';
+    for(const p of parts){
+      const row = document.createElement('div');
+      row.className = 'legendItem';
+      row.innerHTML = `
+        <div class="legendLeft">
+          <span class="legendSwatch" style="background:${p.color}"></span>
+          <span>${p.key}</span>
+        </div>
+        <div><strong>${fmt(p.value)}</strong></div>
+      `;
+      legend.appendChild(row);
+    }
+  }
+
+  // Copy helpers
+  async function copyText(text, label){
+    try{
+      await navigator.clipboard.writeText(String(text));
+      toast(`${label} copied`);
+    }catch(e){
+      // fallback prompt
+      window.prompt('Copy this:', String(text));
+    }
+  }
+
+  function wireCopyButtons(){
+    const m = $('copyMonthlyBtn');
+    const a = $('copyAnnualBtn');
+    const w = $('copyWeeklyBtn');
+    if(!m || !a || !w) return;
+
+    m.addEventListener('click', () => {
+      const d = readResultsFromDOM();
+      if(!d || !Number.isFinite(d.netMonthly)) return toast('Calculate first');
+      copyText(d.netMonthly.toFixed(2), 'Monthly take-home');
+    });
+
+    a.addEventListener('click', () => {
+      const d = readResultsFromDOM();
+      if(!d || !Number.isFinite(d.netAnnual)) return toast('Calculate first');
+      copyText(d.netAnnual.toFixed(2), 'Annual take-home');
+    });
+
+    w.addEventListener('click', () => {
+      const d = readResultsFromDOM();
+      if(!d || !Number.isFinite(d.netWeekly)) return toast('Calculate first');
+      copyText(d.netWeekly.toFixed(2), 'Weekly take-home');
+    });
+  }
+
+  // Hide irrelevant inputs based on pay mode
+  function hideUnusedInputs(){
+    const mode = $('mode')?.value || '';
+    const annualField = $('annualSalary')?.closest('.field');
+    const hourlyField = $('hourlyRate')?.closest('.field');
+    const hoursField = $('hoursPerWeek')?.closest('.field');
+
+    // default show all if not found
+    if(!annualField || !hourlyField || !hoursField) return;
+
+    const isAnnual = mode.toLowerCase().includes('annual');
+    annualField.style.display = isAnnual ? '' : 'none';
+    hourlyField.style.display = isAnnual ? 'none' : '';
+    hoursField.style.display = isAnnual ? 'none' : '';
+  }
+
+  // Auto-calc (debounced) when required inputs present
+  function autoCalcSetup(){
+    const calcBtn = $('calcBtn');
+    const resetBtn = $('resetBtn');
+    if(!calcBtn) return;
+
+    // reset confirm
+    if(resetBtn){
+      resetBtn.addEventListener('click', (e) => {
+        const ok = confirm('Clear all inputs?');
+        if(!ok){
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+    }
+
+    // debounce typing
+    let t = null;
+    const kick = () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        hideUnusedInputs();
+
+        const mode = $('mode')?.value || '';
+        const isAnnual = mode.toLowerCase().includes('annual');
+
+        const annual = parseGBP($('annualSalary')?.value);
+        const hr = parseGBP($('hourlyRate')?.value);
+        const hrs = parseGBP($('hoursPerWeek')?.value);
+
+        const hasRequired = isAnnual
+          ? (annual != null && annual > 0)
+          : (hr != null && hr > 0 && hrs != null && hrs > 0);
+
+        if(hasRequired){
+          calcBtn.click();
+        }
+      }, 450);
+    };
+
+    // watch inputs/selects
+    const inputs = Array.from(document.querySelectorAll('input, select'));
+    inputs.forEach(el => el.addEventListener('input', kick));
+    inputs.forEach(el => el.addEventListener('change', kick));
+
+    // also on mode change
+    $('mode')?.addEventListener('change', () => {
+      hideUnusedInputs();
+      kick();
+    });
+
+    // initial
+    hideUnusedInputs();
+  }
+
+  // Scenarios: save/load locally
+  const SC_KEY = 'wagewiseuk_scenarios_v1';
+
+  function getAllScenarioInputs(){
+    // capture known ids if present
+    const ids = [
+      'region','mode','annualSalary','hourlyRate','hoursPerWeek',
+      'taxCode','pensionPct','salarySacrifice','studentLoan',
+      'sfFrequency','sfP1','sfP2','sfP3','sfP4'
+    ];
+    const state = {};
+    for(const id of ids){
+      const el = $(id);
+      if(!el) continue;
+      if(el.type === 'checkbox') state[id] = !!el.checked;
+      else state[id] = el.value;
+    }
+    return state;
+  }
+
+  function applyScenarioInputs(state){
+    if(!state) return;
+    Object.entries(state).forEach(([id,val]) => {
+      const el = $(id);
+      if(!el) return;
+      if(el.type === 'checkbox') el.checked = !!val;
+      else el.value = String(val);
+    });
+
+    // keep UI consistent
+    if(typeof syncModeUI === 'function') syncModeUI();
+    hideUnusedInputs();
+    toast('Scenario loaded');
+  }
+
+  function loadScenarios(){
+    try{
+      const raw = localStorage.getItem(SC_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){
+      return {};
+    }
+  }
+
+  function saveScenarios(obj){
+    localStorage.setItem(SC_KEY, JSON.stringify(obj || {}));
+  }
+
+  function refreshScenarioUI(){
+    const sel = $('scenarioSelect');
+    if(!sel) return;
+    const all = loadScenarios();
+    const names = Object.keys(all).sort((a,b)=>a.localeCompare(b));
+    sel.innerHTML = '';
+    const opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = names.length ? 'Select…' : 'No saved scenarios';
+    sel.appendChild(opt0);
+    for(const n of names){
+      const o = document.createElement('option');
+      o.value = n;
+      o.textContent = n;
+      sel.appendChild(o);
+    }
+  }
+
+  function wireScenarioButtons(){
+    const saveBtn = $('saveScenarioBtn');
+    const loadBtn = $('loadScenarioBtn');
+    const delBtn = $('deleteScenarioBtn');
+    const nameEl = $('scenarioName');
+    const sel = $('scenarioSelect');
+
+    if(!saveBtn || !loadBtn || !delBtn || !nameEl || !sel) return;
+
+    refreshScenarioUI();
+
+    saveBtn.addEventListener('click', () => {
+      const name = (nameEl.value || '').trim();
+      if(!name) return toast('Add a name first');
+      const all = loadScenarios();
+      all[name] = getAllScenarioInputs();
+      saveScenarios(all);
+      refreshScenarioUI();
+      sel.value = name;
+      toast('Scenario saved');
+    });
+
+    loadBtn.addEventListener('click', () => {
+      const key = sel.value;
+      if(!key) return toast('Select a scenario');
+      const all = loadScenarios();
+      applyScenarioInputs(all[key]);
+      // auto-calc after load
+      $('calcBtn')?.click();
+    });
+
+    delBtn.addEventListener('click', () => {
+      const key = sel.value || (nameEl.value || '').trim();
+      if(!key) return toast('Select or type a name');
+      const all = loadScenarios();
+      if(!all[key]) return toast('Not found');
+      const ok = confirm(`Delete "${key}"?`);
+      if(!ok) return;
+      delete all[key];
+      saveScenarios(all);
+      refreshScenarioUI();
+      toast('Deleted');
+    });
+  }
+
+  // Observe Results updates → enhance automatically
+  function observeResults(){
+    const res = $('results');
+    if(!res) return;
+
+    const run = () => {
+      const data = readResultsFromDOM();
+      applyTakeHomeFocus();
+      renderBreakdown(data);
+    };
+
+    const mo = new MutationObserver(() => run());
+    mo.observe(res, { childList: true, subtree: true });
+    run();
+  }
+
+  // Boot UX enhancements
+  wireCopyButtons();
+  wireScenarioButtons();
+  autoCalcSetup();
+  observeResults();
+})();
