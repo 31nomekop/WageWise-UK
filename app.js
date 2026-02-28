@@ -1,5 +1,15 @@
 // WageWise UK (PWA) — 2025/26 PAYE estimator (single-file, GitHub Pages friendly)
 
+// Splash fade-out (keeps first paint clean on slower phones)
+window.addEventListener('load', () => {
+  const splash = document.getElementById('splash');
+  if (!splash) return;
+  // small delay so the logo is visible even on fast loads
+  setTimeout(() => splash.classList.add('hide'), 450);
+  // remove from DOM after transition to keep things tidy
+  setTimeout(() => splash.remove(), 900);
+});
+
 const TY = {
   standardPersonalAllowance: 12570,
   allowanceTaperStart: 100000,
