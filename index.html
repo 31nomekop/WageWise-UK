@@ -45,15 +45,17 @@
 
         <div class="grid">
           <div id="annualBox">
-          <label class="field">
-            <span>Annual salary (£)</span>
-            <input id="annualSalary" inputmode="decimal" placeholder="e.g. 30000" />
-          </label>
-        </div>
+            <label class="field">
+              <span>Annual salary (£)</span>
+              <input id="annualSalary" inputmode="decimal" placeholder="e.g. 30000" />
+              <div class="fieldError" id="err_annualSalary" aria-live="polite"></div>
+            </label>
+          </div>
 
           <label class="field">
             <span>Pension %</span>
             <input id="pensionPercent" inputmode="decimal" placeholder="e.g. 5" />
+            <div class="fieldError" id="err_pensionPercent" aria-live="polite"></div>
           </label>
 
           <label class="toggle">
@@ -87,16 +89,18 @@
             </label>
 
             <div id="hourlyBox" hidden>
-            <label class="field">
-              <span>Hourly rate (£)</span>
-              <input id="hourlyRate" inputmode="decimal" placeholder="e.g. 12.21" />
-            </label>
+              <label class="field">
+                <span>Hourly rate (£)</span>
+                <input id="hourlyRate" inputmode="decimal" placeholder="e.g. 12.21" />
+                <div class="fieldError" id="err_hourlyRate" aria-live="polite"></div>
+              </label>
 
-            <label class="field">
-              <span>Hours per week</span>
-              <input id="hoursPerWeek" inputmode="decimal" placeholder="e.g. 16" />
-            </label>
-          </div>
+              <label class="field">
+                <span>Hours per week</span>
+                <input id="hoursPerWeek" inputmode="decimal" placeholder="e.g. 16" />
+                <div class="fieldError" id="err_hoursPerWeek" aria-live="polite"></div>
+              </label>
+            </div>
 
             <label class="field">
               <span>Tax code</span>
@@ -169,19 +173,19 @@
       </section>
     </div>
 
-      <section class="card trust">
-        <h2>How calculations work</h2>
-        <details>
-          <summary>View explanation</summary>
-          <div class="fine">
-            <p><strong>Income Tax:</strong> Estimated using standard UK PAYE tax bands for the selected tax year.</p>
-            <p><strong>National Insurance:</strong> Estimated using employee NI thresholds.</p>
-            <p><strong>Student Loans:</strong> Calculated using the thresholds for your chosen repayment plan.</p>
-            <p><strong>Pension:</strong> Calculated as a percentage of gross salary. If you select <em>salary sacrifice</em>, pension reduces taxable pay before tax and NI are estimated.</p>
-          </div>
-        </details>
-        <div class="privacyLine">🔒 All calculations run locally in your browser. No data is sent anywhere.</div>
-      </section>
+    <section class="card trust">
+      <h2>How calculations work</h2>
+      <details>
+        <summary>View explanation</summary>
+        <div class="fine">
+          <p><strong>Income Tax:</strong> Estimated using standard UK PAYE tax bands for the selected tax year.</p>
+          <p><strong>National Insurance:</strong> Estimated using employee NI thresholds.</p>
+          <p><strong>Student Loans:</strong> Calculated using the thresholds for your chosen repayment plan.</p>
+          <p><strong>Pension:</strong> Calculated as a percentage of gross salary. If you select <em>salary sacrifice</em>, pension reduces taxable pay before tax and NI are estimated.</p>
+        </div>
+      </details>
+      <div class="privacyLine">🔒 All calculations run locally in your browser. No data is sent anywhere.</div>
+    </section>
 
     <!-- Salary Finder view -->
     <div id="viewSalary" hidden>
@@ -214,18 +218,22 @@
           <label class="field">
             <span>Gross pay (Payslip 1)</span>
             <input id="sfP1" inputmode="decimal" placeholder="e.g. 420.50" />
+            <div class="fieldError" id="err_sfP1" aria-live="polite"></div>
           </label>
           <label class="field">
             <span>Gross pay (Payslip 2)</span>
             <input id="sfP2" inputmode="decimal" placeholder="e.g. 398.10" />
+            <div class="fieldError" id="err_sfP2" aria-live="polite"></div>
           </label>
           <label class="field">
             <span>Gross pay (Payslip 3)</span>
             <input id="sfP3" inputmode="decimal" placeholder="e.g. 455.00" />
+            <div class="fieldError" id="err_sfP3" aria-live="polite"></div>
           </label>
           <label class="field">
             <span>Gross pay (Payslip 4)</span>
             <input id="sfP4" inputmode="decimal" placeholder="e.g. 410.25" />
+            <div class="fieldError" id="err_sfP4" aria-live="polite"></div>
           </label>
         </div>
 
