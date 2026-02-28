@@ -1,4 +1,4 @@
-const CACHE = 'wagewiseuk-pwa-v1-0-trust';
+const CACHE_NAME = "wagewiseuk-v1.1.0";
 const ASSETS = [
   './',
   './index.html',
