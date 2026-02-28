@@ -148,3 +148,24 @@ button.ghost{background: transparent}
   border-color:rgba(255,255,255,.18);
 }
 .switcher .seg:active{ transform: translateY(1px); }
+/* Footer links */
+.footerLinks{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:8px;
+  font-size:12px;
+  opacity:.8;
+}
+
+.footerLinks a{
+  color: rgba(242,245,247,.9);
+  text-decoration:none;
+  border-bottom:1px dashed rgba(242,245,247,.35);
+}
+
+.footerLinks a:active{
+  opacity:.7;
+}
