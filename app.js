@@ -572,6 +572,11 @@ wireCopyButtons();
 
 // boot
 resetUI();
-syncModeUI();
+syncModelUI();
 wireViewSwitcher();
 setActiveView('calc');
+
+const footerVersion = document.querySelector(".footer-version");
+if (footerVersion) {
+  footerVersion.textContent = "WageWise UK • v" + APP_VERSION;
+}
