@@ -5,9 +5,19 @@
   --mint:#56dcae;
   --stroke:rgba(255,255,255,.14);
   --r:18px;
+
+  --fs-hero: clamp(2.1rem, 5vw, 3.0rem);
+  --fs-h2: 1.6rem;
+  --fs-body: 1rem;
+  --fs-small: .92rem;
+  --lh-body: 1.45;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --focus: 0 0 0 3px rgba(45,191,130,.25);
 }
 *{box-sizing:border-box}
-html,body{height:100%}
+html,body{height:100%  line-height: var(--lh-body);
+}
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;
@@ -26,6 +36,17 @@ body{
   display:flex; align-items:center; justify-content:space-between;
 }
 .brand{display:flex; gap:12px; align-items:center}
+
+.brand .logo{
+  width:44px;height:44px;flex:0 0 auto;
+  display:grid;place-items:center;
+  border-radius:999px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.10);
+  overflow:hidden;
+}
+.brand .logo img{
+  width:44px;height:44px;display:block;
+}
 .mark{
   width:42px; height:42px; display:grid; place-items:center;
   border-radius:14px;
@@ -215,3 +236,13 @@ button.ghost{background: transparent}
 }
 
 .footerLinks a:active{opacity:.7}
+
+/* Micro-interactions + accessibility */
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+.btn:active, .seg:active { transform: translateY(1px); }
+.btn:focus-visible, .seg:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.footerLinks a{ text-decoration-thickness: 2px; text-underline-offset: 8px; }
+.footerLinks a:hover{ opacity: .95; }
