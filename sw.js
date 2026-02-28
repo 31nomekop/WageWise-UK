@@ -1,15 +1,18 @@
-const CACHE = 'wagewiseuk-pwa-v1-0-trust';
+const CACHE = 'wagewiseuk-pwa-v1-1';
 const ASSETS = [
-  './',
-  './index.html',
-  './about.html',
-  './privacy.html',
-  './disclaimer.html',
-  './styles.css',
-  './app.js',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  "./",
+  "./index.html",
+  "./about.html",
+  "./privacy.html",
+  "./disclaimer.html",
+  "./styles.css",
+  "./app.js",
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./icon-192-maskable.png",
+  "./icon-512-maskable.png",
+  "./apple-touch-icon.png"
 ];
 
 self.addEventListener('install', (event) => {

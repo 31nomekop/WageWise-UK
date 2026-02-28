@@ -28,24 +28,28 @@ body{
   color:var(--text);
 }
 .topbar{
-  position:sticky; top:0; z-index:10;
+  position:relative;
+  z-index:10;
   backdrop-filter: blur(14px);
   background: rgba(15,20,28,.72);
   border-bottom:1px solid var(--stroke);
-  padding: 14px 16px;
-  display:flex; align-items:center; justify-content:space-between;
+  padding: 20px 16px 14px;
+  display:flex;
+  justify-content:center;
+  text-align:center;
 }
-.brand{display:flex; gap:12px; align-items:center}
+
+.brand{display:flex; flex-direction:column; gap:10px; align-items:center}
 
 .brand .logo{
-  width:44px;height:44px;flex:0 0 auto;
+  width:56px;height:56px;flex:0 0 auto;
   display:grid;place-items:center;
   border-radius:999px;
   box-shadow: 0 10px 24px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.10);
   overflow:hidden;
 }
 .brand .logo img{
-  width:44px;height:44px;display:block;
+  width:56px;height:56px;display:block;
 }
 .mark{
   width:42px; height:42px; display:grid; place-items:center;
