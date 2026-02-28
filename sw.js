@@ -1,7 +1,10 @@
-const CACHE = 'wagewiseuk-pwa-fresh-v3';
+const CACHE = 'wagewiseuk-pwa-v1-0-trust';
 const ASSETS = [
   './',
   './index.html',
+  './about.html',
+  './privacy.html',
+  './disclaimer.html',
   './styles.css',
   './app.js',
   './manifest.json',

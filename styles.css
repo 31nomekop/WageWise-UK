@@ -148,16 +148,64 @@ button.ghost{background: transparent}
   border-color:rgba(255,255,255,.18);
 }
 .switcher .seg:active{ transform: translateY(1px); }
-/* Footer links */
+
+/* --- Stage 2 (Trust Layer) additions --- */
+.badge{
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+  color:rgba(242,245,247,.92);
+  font-size:12px;
+  margin:10px 0 14px;
+}
+
+.badge strong{font-weight:700}
+
+.trust details{
+  margin-top:8px;
+}
+
+.trust summary{
+  cursor:pointer;
+  user-select:none;
+  font-weight:700;
+  color:rgba(242,245,247,.92);
+  list-style:none;
+}
+
+.trust summary::-webkit-details-marker{display:none}
+
+.trust summary::after{
+  content:"▾";
+  float:right;
+  opacity:.75;
+}
+
+.trust details[open] summary::after{
+  content:"▴";
+}
+
+.privacyLine{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.10);
+  color:rgba(242,245,247,.80);
+  font-size:13px;
+}
+
 .footerLinks{
   display:flex;
   gap:10px;
   justify-content:center;
   align-items:center;
   flex-wrap:wrap;
-  margin-top:8px;
+  margin-top:10px;
   font-size:12px;
-  opacity:.8;
+  color:rgba(242,245,247,.75);
 }
 
 .footerLinks a{
@@ -166,6 +214,4 @@ button.ghost{background: transparent}
   border-bottom:1px dashed rgba(242,245,247,.35);
 }
 
-.footerLinks a:active{
-  opacity:.7;
-}
+.footerLinks a:active{opacity:.7}

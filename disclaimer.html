@@ -8,41 +8,36 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="topbar">
+  <header class="top">
     <div class="brand">
       <div>
-        <div class="title">WageWise UK</div>
-        <div class="subtitle">Disclaimer</div>
+        <h1>WageWise UK</h1>
+        <p>Important information</p>
       </div>
     </div>
-    <a class="ghost" href="index.html" style="text-decoration:none;display:inline-block;padding:12px 14px;border-radius:14px;">
-      ← Back
-    </a>
+    <div class="switcher" style="max-width:520px;margin:10px auto 0;">
+      <a class="seg active" href="index.html" style="text-decoration:none;display:inline-flex;justify-content:center;align-items:center;">← Back to calculator</a>
+    </div>
   </header>
 
   <main class="wrap">
     <section class="card">
-      <h2>Estimator only</h2>
-      <p class="fine">
-        WageWise UK provides estimates based on the information you enter and common UK PAYE rules.
-        It is not financial, tax, or legal advice.
-      </p>
-
-      <h2>Real payslips can differ</h2>
-      <p class="fine">
-        Your actual pay may differ due to payroll periods, benefits, adjustments to tax codes, workplace pension rules,
-        salary sacrifice arrangements, and other employer-specific deductions.
-      </p>
-
-      <h2>Use official sources when needed</h2>
-      <p class="fine">
-        For official calculations or advice, refer to HMRC guidance or a qualified professional.
-      </p>
+      <h2>Disclaimer</h2>
+<p class="fine"><strong>Estimator only:</strong> WageWise UK provides estimates based on the information you enter and common UK PAYE rules. It is not financial, tax or legal advice.</p>
+<p class="fine"><strong>Real payslips can differ:</strong> Your actual pay may vary due to payroll periods, benefits, tax code changes, workplace pension rules, salary sacrifice arrangements and employer-specific deductions.</p>
+<p class="fine"><strong>Official sources:</strong> For official calculations or advice, refer to HMRC guidance or a qualified professional.</p>
     </section>
   </main>
 
   <footer class="foot">
-    <span>WageWise UK</span>
+    <span>WageWise UK • v1.0</span>
+    <nav class="footerLinks" aria-label="Footer links">
+      <a href="about.html">About</a>
+      <span aria-hidden="true">•</span>
+      <a href="privacy.html">Privacy</a>
+      <span aria-hidden="true">•</span>
+      <a href="disclaimer.html">Disclaimer</a>
+    </nav>
   </footer>
 </body>
 </html>

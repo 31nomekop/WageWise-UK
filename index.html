@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>WageWise UK</title>
+  <title>UK Take-Home Pay Calculator 2025/26 | WageWise UK</title>
   <meta name="theme-color" content="#10141c" />
-  <meta name="description" content="WageWise UK: take-home pay estimator for 2025/26. PAYE, NI, Student Loans, region-aware." />
+  <meta name="description" content="Free UK take-home pay calculator for 2025/26. Calculate salary or hourly wages, pension, student loans and estimate annual salary from payslips.">
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon-192.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
@@ -13,8 +13,7 @@
 </head>
 <body>
   <header class="top">
-    <div class="brand">
-      <div>
+    <div class="brand">      <div>
         <h1>WageWise UK</h1>
         <p>Take-home pay, clearly • Updated for 2025/26</p>
       </div>
@@ -27,6 +26,8 @@
   </header>
 
   <main class="wrap">
+    <div class="badge" aria-label="Tax year">🇬🇧 UK Tax Year <strong>2025/26</strong></div>
+
     <!-- Calculator view -->
     <div id="viewCalc">
       <section class="card" id="inputsCard">
@@ -158,6 +159,20 @@
       </section>
     </div>
 
+      <section class="card trust">
+        <h2>How calculations work</h2>
+        <details>
+          <summary>View explanation</summary>
+          <div class="fine">
+            <p><strong>Income Tax:</strong> Estimated using standard UK PAYE tax bands for the selected tax year.</p>
+            <p><strong>National Insurance:</strong> Estimated using employee NI thresholds.</p>
+            <p><strong>Student Loans:</strong> Calculated using the thresholds for your chosen repayment plan.</p>
+            <p><strong>Pension:</strong> Calculated as a percentage of gross salary. If you select <em>salary sacrifice</em>, pension reduces taxable pay before tax and NI are estimated.</p>
+          </div>
+        </details>
+        <div class="privacyLine">🔒 All calculations run locally in your browser. No data is sent anywhere.</div>
+      </section>
+
     <!-- Salary Finder view -->
     <div id="viewSalary" hidden>
       <section class="card">
@@ -234,16 +249,15 @@
   </main>
 
   <footer class="foot">
-    <span>WageWise UK • PWA</span>
-    <nav class="footerLinks">
-  <a href="about.html">About</a>
-  <span>•</span>
-  <a href="privacy.html">Privacy</a>
-  <span>•</span>
-  <a href="disclaimer.html">Disclaimer</a>
-</nav>
-    
-</footer>
+    <span>WageWise UK • v1.0</span>
+    <nav class="footerLinks" aria-label="Footer links">
+      <a href="about.html">About</a>
+      <span aria-hidden="true">•</span>
+      <a href="privacy.html">Privacy</a>
+      <span aria-hidden="true">•</span>
+      <a href="disclaimer.html">Disclaimer</a>
+    </nav>
+  </footer>
 
   <script src="app.js"></script>
 </body>
