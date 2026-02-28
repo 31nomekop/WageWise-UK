@@ -283,6 +283,11 @@ function syncModeUI(){
   document.getElementById('hourlyBox').hidden = (mode === 'annualSalary');
 }
 
+// Safety alias (prevents accidental runtime crash if an older call exists)
+function syncModelUI(){
+  syncModeUI();
+}
+
 function toast(msg){
   const el = document.getElementById('toast');
   if(!el) return;
@@ -290,6 +295,70 @@ function toast(msg){
   el.classList.add('show');
   clearTimeout(toast._t);
   toast._t = setTimeout(()=> el.classList.remove('show'), 1400);
+}
+
+// ===== Inline validation (light layer) =====
+function setFieldError(inputId, errId, msg){
+  const input = document.getElementById(inputId);
+  const err = document.getElementById(errId);
+  if(!input || !err) return;
+
+  if(!msg){
+    err.textContent = '';
+    input.classList.remove('invalid');
+  } else {
+    err.textContent = msg;
+    input.classList.add('invalid');
+  }
+}
+
+function readNonNegNumber(inputId){
+  const el = document.getElementById(inputId);
+  if(!el) return { ok:false, n:null, blank:true };
+  const raw = String(el.value ?? '').trim();
+  if(raw === '') return { ok:false, n:null, blank:true };
+
+  const n = parseMoney(raw);
+  if(n == null || !Number.isFinite(n)) return { ok:false, n:null, blank:false };
+  if(n < 0) return { ok:false, n:n, blank:false };
+  return { ok:true, n:n, blank:false };
+}
+
+function validateAllInputs(){
+  // clear everything first
+  [
+    ['annualSalary','err_annualSalary'],
+    ['pensionPercent','err_pensionPercent'],
+    ['hourlyRate','err_hourlyRate'],
+    ['hoursPerWeek','err_hoursPerWeek'],
+    ['sfP1','err_sfP1'],
+    ['sfP2','err_sfP2'],
+    ['sfP3','err_sfP3'],
+    ['sfP4','err_sfP4'],
+  ].forEach(([i,e]) => setFieldError(i,e,''));
+
+  const mode = document.getElementById('mode')?.value || 'annualSalary';
+
+  // Calculator validation (only validate visible mode while typing)
+  if(mode === 'annualSalary'){
+    const v = readNonNegNumber('annualSalary');
+    if(!v.blank && !v.ok) setFieldError('annualSalary','err_annualSalary','Enter a valid annual salary.');
+  } else {
+    const hr = readNonNegNumber('hourlyRate');
+    const hrs = readNonNegNumber('hoursPerWeek');
+    if(!hr.blank && !hr.ok) setFieldError('hourlyRate','err_hourlyRate','Enter a valid hourly rate.');
+    if(!hrs.blank && !hrs.ok) setFieldError('hoursPerWeek','err_hoursPerWeek','Enter valid hours per week.');
+  }
+
+  const pen = readNonNegNumber('pensionPercent');
+  if(!pen.blank && !pen.ok) setFieldError('pensionPercent','err_pensionPercent','Pension must be a number (0–100).');
+  if(pen.ok && pen.n > 100) setFieldError('pensionPercent','err_pensionPercent','Pension cannot be over 100%.');
+
+  // Salary Finder validation (only if values are entered)
+  ['sfP1','sfP2','sfP3','sfP4'].forEach(id => {
+    const v = readNonNegNumber(id);
+    if(!v.blank && !v.ok) setFieldError(id, 'err_' + id, 'Enter a valid gross pay amount.');
+  });
 }
 
 // Salary Finder
@@ -333,6 +402,7 @@ function sfApplyToCalculator(annual){
   syncModeUI();
   setActiveView('calc');
   document.getElementById('annualSalary').value = String(annual);
+  validateAllInputs();
   document.getElementById('inputsCard')?.scrollIntoView({behavior:'smooth', block:'start'});
   document.getElementById('calcBtn').click();
 }
@@ -341,6 +411,7 @@ function sfClear(){
   document.getElementById('sfOutput').innerHTML = '<div class="hint">Add up to 4 payslips, then tap <strong>Estimate</strong>.</div>';
   document.getElementById('sfApplyBtn').disabled = true;
   sfLastAnnual = null;
+  validateAllInputs();
 }
 
 // Scenarios
@@ -366,6 +437,7 @@ function applyScenarioState(state){
     else el.value = String(val);
   });
   syncModeUI();
+  validateAllInputs();
   document.getElementById('calcBtn').click();
 }
 function refreshScenarioUI(){
@@ -458,7 +530,11 @@ function runCalculation(){
   const el = document.getElementById('results');
   const showError = (msg) => { if(el) el.innerHTML = `<div class="hint">${msg}</div>`; };
 
+  // Inline validation on submit
+  validateAllInputs();
+
   if(input.mode === 'annualSalary' && (!input.grossAnnual || input.grossAnnual <= 0)){
+    setFieldError('annualSalary','err_annualSalary','Annual salary is required.');
     showError('Enter an annual salary to calculate.');
     lastResult = null;
     updateUxExtras({grossAnnual:0,incomeTaxAnnual:0,nationalInsuranceAnnual:0,studentLoanAnnual:0,pensionAnnual:0,netAnnual:0});
@@ -468,6 +544,8 @@ function runCalculation(){
     const hr = parseMoney(document.getElementById('hourlyRate').value);
     const hrs = parseMoney(document.getElementById('hoursPerWeek').value);
     if(!(hr > 0 && hrs > 0)){
+      setFieldError('hourlyRate','err_hourlyRate','Hourly rate is required.');
+      setFieldError('hoursPerWeek','err_hoursPerWeek','Hours per week is required.');
       showError('Enter an hourly rate and hours per week to calculate.');
       lastResult = null;
       updateUxExtras({grossAnnual:0,incomeTaxAnnual:0,nationalInsuranceAnnual:0,studentLoanAnnual:0,pensionAnnual:0,netAnnual:0});
@@ -494,6 +572,7 @@ function resetUI(){
   sfClear();
   document.getElementById('results').innerHTML = '<div class="hint">Enter your details and tap <strong>Calculate</strong>.</div>';
   updateUxExtras({grossAnnual:0,incomeTaxAnnual:0,nationalInsuranceAnnual:0,studentLoanAnnual:0,pensionAnnual:0,netAnnual:0});
+  validateAllInputs();
 }
 
 // Install prompt
@@ -550,7 +629,7 @@ function wireViewSwitcher(){
 
 
 // Wire events
-document.getElementById('mode').addEventListener('change', () => { syncModeUI(); scheduleAutoCalc(); });
+document.getElementById('mode').addEventListener('change', () => { syncModeUI(); validateAllInputs(); scheduleAutoCalc(); });
 
 ['region','annualSalary','hourlyRate','hoursPerWeek','taxCode','pensionPercent','salarySacrifice','studentLoan'].forEach(id => {
   const el = document.getElementById(id);
@@ -559,11 +638,22 @@ document.getElementById('mode').addEventListener('change', () => { syncModeUI();
   el.addEventListener('change', scheduleAutoCalc);
 });
 
+// live inline validation
+['annualSalary','hourlyRate','hoursPerWeek','pensionPercent','sfP1','sfP2','sfP3','sfP4'].forEach(id => {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', validateAllInputs);
+  el.addEventListener('change', validateAllInputs);
+});
+
 document.getElementById('calcBtn').addEventListener('click', () => { try{ runCalculation(); } catch(e){ console.error(e); toast('Error: check inputs'); } });
 
 document.getElementById('resetBtn').addEventListener('click', () => { if(!confirm('Clear all inputs?')) return; resetUI(); syncModeUI(); });
 
-document.getElementById('sfEstimateBtn').addEventListener('click', () => { sfLastAnnual = sfEstimate(); });
+document.getElementById('sfEstimateBtn').addEventListener('click', () => {
+  validateAllInputs();
+  sfLastAnnual = sfEstimate();
+});
 document.getElementById('sfApplyBtn').addEventListener('click', () => { sfApplyToCalculator(sfLastAnnual); });
 document.getElementById('sfClearBtn').addEventListener('click', () => { sfClear(); });
 
@@ -580,3 +670,6 @@ const footerVersion = document.querySelector(".footer-version");
 if (footerVersion) {
   footerVersion.textContent = "WageWise UK • v" + APP_VERSION;
 }
+
+// initial validation state
+validateAllInputs();
