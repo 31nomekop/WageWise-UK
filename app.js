@@ -1,4 +1,4 @@
-const APP_VERSION = "1.3.3";
+const APP_VERSION = "1.3.5";
 // WageWise UK (PWA) — 2025/26 PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
@@ -123,16 +123,32 @@ function currencyGBP(x){
 
 function parseTaxCode(raw){
   const code = String(raw || '').trim().toUpperCase();
+
+  // Common special codes
   if(code === 'NT') return { isNoTax:true, allowanceOverride:null, flatRate:null };
   if(code === 'BR') return { isNoTax:false, allowanceOverride:0, flatRate:0.20 };
   if(code === 'D0') return { isNoTax:false, allowanceOverride:0, flatRate:0.40 };
   if(code === 'D1') return { isNoTax:false, allowanceOverride:0, flatRate:0.45 };
 
+  // 0T = zero personal allowance
+  if(code === '0T') return { isNoTax:false, allowanceOverride:0, flatRate:null };
+
+  // K codes = negative allowance (adds to taxable pay)
+  const km = code.match(/^K(\d+)$/);
+  if(km){
+    const n = parseInt(km[1], 10);
+    if(Number.isFinite(n) && n >= 0) return { isNoTax:false, allowanceOverride: -(n * 10), flatRate:null };
+  }
+
+  // Standard numeric tax codes (e.g. 1257L, 1257M, 1257N)
   const m = code.match(/^([0-9]+)/);
   if(m){
     const n = parseInt(m[1], 10);
-    if(Number.isFinite(n) && n > 0) return { isNoTax:false, allowanceOverride: n * 10, flatRate:null };
+    // Allow 0 here (but 0T handled above). 0L etc -> 0 allowance.
+    if(Number.isFinite(n) && n >= 0) return { isNoTax:false, allowanceOverride: n * 10, flatRate:null };
   }
+
+  // Unknown / blank => use default allowance rules
   return { isNoTax:false, allowanceOverride:null, flatRate:null };
 }
 
@@ -445,8 +461,25 @@ function validateAllInputs(){
 function sfSolveGrossFromNet(targetNetAnnual, assumptions){
   // Binary search gross salary so compute() netAnnual matches target net.
   // assumptions: {region,taxCode,pensionPercent,salarySacrifice,studentLoan}
-  let lo = 0, hi = 300000; // plenty for typical users
-  for(let i=0;i<28;i++){
+  let lo = 0, hi = 300000;
+
+  // If the target is high, expand the search range until we bracket it (or hit a sensible cap).
+  // This avoids silently under-shooting for higher targets.
+  for(let j=0;j<10;j++){
+    const outHi = compute({
+      grossAnnual: hi,
+      region: assumptions.region,
+      taxCode: assumptions.taxCode,
+      pensionPercent: assumptions.pensionPercent,
+      salarySacrifice: assumptions.salarySacrifice,
+      studentLoan: assumptions.studentLoan
+    });
+    if(outHi.netAnnual >= targetNetAnnual) break;
+    hi = Math.min(hi * 2, 2000000);
+    if(hi === 2000000) break;
+  }
+
+  for(let i=0;i<30;i++){
     const mid = (lo + hi) / 2;
     const out = compute({
       grossAnnual: mid,

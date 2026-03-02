@@ -1,4 +1,4 @@
-const CACHE = "wagewiseuk-v1.3.3";
+const CACHE = "wagewiseuk-v1.3.5";
 const ASSETS = [
   './',
   './index.html',
@@ -31,7 +31,32 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
-  );
+  // Stale-while-revalidate for same-origin GET requests:
+  // - Serve cached response instantly (offline-friendly)
+  // - Update cache in the background so the next load gets the latest assets
+  if(event.request.method !== 'GET') return;
+
+  const reqUrl = new URL(event.request.url);
+  const sameOrigin = reqUrl.origin === self.location.origin;
+
+  if(!sameOrigin){
+    // For cross-origin, just fall back to network (don’t cache).
+    return;
+  }
+
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    const cached = await cache.match(event.request);
+
+    const fetchPromise = fetch(event.request).then((resp) => {
+      // Only cache successful basic responses
+      if(resp && resp.ok && resp.type === 'basic'){
+        cache.put(event.request, resp.clone());
+      }
+      return resp;
+    }).catch(() => null);
+
+    // If we have something cached, return it immediately; otherwise wait for network.
+    return cached || (await fetchPromise) || new Response('Offline', { status: 503, statusText: 'Offline' });
+  })());
 });

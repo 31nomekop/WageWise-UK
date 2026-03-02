@@ -22,7 +22,8 @@ body{
   backdrop-filter: blur(14px);
   background: rgba(15,20,28,.72);
   border-bottom:1px solid var(--stroke);
-  padding: 14px 16px;
+  /* iOS PWA safe-area so the header never gets clipped */
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
   display:flex; align-items:center; justify-content:space-between;
 }
 .brand{display:flex; gap:12px; align-items:center}
@@ -348,7 +349,7 @@ button.ghost{background: transparent}
   background: linear-gradient(180deg, rgba(16,20,28,0.95), rgba(16,20,28,0.65));
   backdrop-filter: blur(10px);
 }
-.brand .mark img{ border-radius: 0; }
+.brand .mark img{ border-radius: 12px; }
 .subtitle{ opacity: .85; }
 .switcher .seg{ padding: 10px 16px; border-radius: 999px; }
 .helpBtn{
