@@ -1,4 +1,4 @@
-const CACHE_NAME = "wagewiseuk-v1.1.0";
+const CACHE = "wagewiseuk-v1.2.0";
 const ASSETS = [
   './',
   './index.html',
@@ -9,7 +9,12 @@ const ASSETS = [
   './app.js',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './logo-full.jpg',
+  './apple-touch-icon.png',
+  './favicon-32.png',
+  './icon-192-maskable.png',
+  './icon-512-maskable.png'
 ];
 
 self.addEventListener('install', (event) => {

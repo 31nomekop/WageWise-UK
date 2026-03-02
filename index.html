@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>UK Take-Home Pay Calculator 2025/26 | WageWise UK</title>
+  <title>UK Take-Home Pay Calculator 2025/26 & 2024/25 | WageWise UK</title>
   <meta name="theme-color" content="#10141c" />
-  <meta name="description" content="Free UK take-home pay calculator for 2025/26. Calculate salary or hourly wages, pension, student loans and estimate annual salary from payslips.">
+  <meta name="description" content="Free UK take-home pay calculator for 2025/26 and 2024/25. Calculate salary or hourly wages, pension, student loans and estimate annual salary from payslips.">
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
@@ -25,7 +25,7 @@
       </div>
       <div>
         <div class="title">WageWise UK</div>
-        <div class="subtitle">Take-home pay, clearly • Updated for 2025/26</div>
+        <div class="subtitle">Take-home pay, clearly • Tax year selectable</div>
       </div>
     </div>
 
@@ -36,9 +36,17 @@
   </header>
 
   <main class="wrap">
-    <div class="badge" aria-label="Tax year">🇬🇧 UK Tax Year <strong>2025/26</strong></div>
 
-    <!-- Calculator view -->
+    <div class="badgeRow" aria-label="Tax year">
+      <div class="badge">🇬🇧 UK Tax Year</div>
+      <label class="badgeSelect" aria-label="Select tax year">
+        <select id="taxYear">
+          <option value="2025/26">2025/26 (current)</option>
+          <option value="2024/25">2024/25</option>
+        </select>
+      </label>
+    </div>
+<!-- Calculator view -->
     <div id="viewCalc">
       <section class="card" id="inputsCard">
         <h2>Inputs</h2>
@@ -168,6 +176,7 @@
             <button id="copyMonthlyBtn" class="ghost" type="button">Copy monthly</button>
             <button id="copyAnnualBtn" class="ghost" type="button">Copy annual</button>
             <button id="copyWeeklyBtn" class="ghost" type="button">Copy weekly</button>
+            <button id="shareBtn" class="ghost" type="button">Share summary</button>
           </div>
         </div>
       </section>

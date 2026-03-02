@@ -115,6 +115,30 @@ button.ghost{background: transparent}
   border-radius:999px; border:1px solid rgba(255,255,255,.14);
   background: rgba(255,255,255,.06); color: rgba(242,245,247,.92); margin-top:6px;
 }
+
+.badgeRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+.badgeRow .badge{ margin-top:0; }
+.badgeSelect select{
+  appearance:none;
+  -webkit-appearance:none;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(242,245,247,.92);
+  padding:6px 12px;
+  font-size:12px;
+  outline:none;
+}
+.badgeSelect select:focus{
+  box-shadow: 0 0 0 3px rgba(86,220,174,.18);
+  border-color: rgba(86,220,174,.45);
+}
 .help{
   margin: 10px 0 12px 0;
   padding: 10px 12px;

@@ -1,4 +1,4 @@
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.2.0";
 // WageWise UK (PWA) — 2025/26 PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
@@ -11,32 +11,101 @@ window.addEventListener('load', () => {
   setTimeout(() => splash.remove(), 900);
 });
 
-const TY = {
-  standardPersonalAllowance: 12570,
-  allowanceTaperStart: 100000,
-  additionalRateStarts: 125140,
-  ewHigherRateStarts: 50270,
+const TAX_YEARS = {
+  "2025/26": {
+    label: "2025/26 (current)",
+    standardPersonalAllowance: 12570,
+    allowanceTaperStart: 100000,
+    additionalRateStarts: 125140,
+    ewHigherRateStarts: 50270,
 
-  scStarterUpper: 15397,
-  scBasicUpper: 27491,
-  scIntermediateUpper: 43662,
-  scHigherUpper: 75000,
-  scAdvancedUpper: 125140,
+    // Scotland (2025/26)
+    scStarterUpper: 15397,
+    scBasicUpper: 27491,
+    scIntermediateUpper: 43662,
+    scHigherUpper: 75000,
+    scAdvancedUpper: 125140,
 
-  niPrimaryThreshold: 12570,
-  niUpperEarningsLimit: 50270,
-  niMainRate: 0.08,
-  niUpperRate: 0.02,
+    // NI (employee)
+    niPrimaryThreshold: 12570,
+    niUpperEarningsLimit: 50270,
+    niMainRate: 0.08,
+    niUpperRate: 0.02,
 
-  // Student loan thresholds (2025/26)
-  slPlan1Threshold: 26065,
-  slPlan2Threshold: 28470,
-  slPlan4Threshold: 32745,
-  slPlan5Threshold: 25000,
-  slPostgradThreshold: 21000,
-  slPlanRate: 0.09,
-  slPostgradRate: 0.06,
+    // Student loan thresholds
+    slPlan1Threshold: 26065,
+    slPlan2Threshold: 28470,
+    slPlan4Threshold: 32745,
+    slPlan5Threshold: 25000,
+    slPostgradThreshold: 21000,
+    slPlanRate: 0.09,
+    slPostgradRate: 0.06,
+  },
+
+  "2024/25": {
+    label: "2024/25",
+    standardPersonalAllowance: 12570,
+    allowanceTaperStart: 100000,
+    additionalRateStarts: 125140,
+    ewHigherRateStarts: 50270,
+
+    // Scotland (2024/25) — differs vs 2025/26
+    scStarterUpper: 14876,
+    scBasicUpper: 26561,
+    scIntermediateUpper: 43662,
+    scHigherUpper: 75000,
+    scAdvancedUpper: 125140,
+
+    // NI (employee)
+    niPrimaryThreshold: 12570,
+    niUpperEarningsLimit: 50270,
+    niMainRate: 0.08,
+    niUpperRate: 0.02,
+
+    // Student loan thresholds
+    slPlan1Threshold: 26065,
+    slPlan2Threshold: 28470,
+    slPlan4Threshold: 32745,
+    slPlan5Threshold: 25000,
+    slPostgradThreshold: 21000,
+    slPlanRate: 0.09,
+    slPostgradRate: 0.06,
+  },
 };
+
+const TAXYEAR_KEY = "wagewiseuk_taxyear_v1";
+let currentTaxYear = "2025/26";
+
+function getTY(){
+  return TAX_YEARS[currentTaxYear] || TAX_YEARS["2025/26"];
+}
+
+function applyTaxYearToUI(){
+  const sel = document.getElementById("taxYear");
+  if(sel) sel.value = currentTaxYear;
+
+  // Update badge text if present
+  const badgeRow = document.querySelector(".badgeRow");
+  if(badgeRow){
+    badgeRow.setAttribute("aria-label", "Tax year " + currentTaxYear);
+  }
+}
+
+function setTaxYear(year){
+  if(!TAX_YEARS[year]) year = "2025/26";
+  currentTaxYear = year;
+  try{ localStorage.setItem(TAXYEAR_KEY, currentTaxYear); }catch(e){}
+  applyTaxYearToUI();
+
+  // Recalculate if we already have results on screen
+  const mode = document.getElementById('mode')?.value || 'annualSalary';
+  const isAnnual = mode === 'annualSalary';
+  const annual = parseMoney(document.getElementById('annualSalary')?.value);
+  const hr = parseMoney(document.getElementById('hourlyRate')?.value);
+  const hrs = parseMoney(document.getElementById('hoursPerWeek')?.value);
+  const ok = isAnnual ? (annual != null && annual > 0) : (hr != null && hr > 0 && hrs != null && hrs > 0);
+  if(ok) document.getElementById('calcBtn')?.click();
+}
 
 function round2(x){ return Math.round((x + Number.EPSILON) * 100) / 100; }
 function clamp(x, min, max){ return Math.min(Math.max(x, min), max); }
@@ -69,15 +138,15 @@ function parseTaxCode(raw){
   return { isNoTax:false, allowanceOverride:null, flatRate:null };
 }
 
-function personalAllowance(adjustedNetIncome, taxCode){
+function personalAllowance(adjustedNetIncome, taxCode, ty){
   const parsed = parseTaxCode(taxCode);
   if(parsed.isNoTax) return adjustedNetIncome;
 
-  const base = (parsed.allowanceOverride != null) ? parsed.allowanceOverride : TY.standardPersonalAllowance;
+  const base = (parsed.allowanceOverride != null) ? parsed.allowanceOverride : ty.standardPersonalAllowance;
   if(base <= 0) return 0;
-  if(adjustedNetIncome <= TY.allowanceTaperStart) return base;
+  if(adjustedNetIncome <= ty.allowanceTaperStart) return base;
 
-  const over = adjustedNetIncome - TY.allowanceTaperStart;
+  const over = adjustedNetIncome - ty.allowanceTaperStart;
   const reduction = over / 2;
   return round2(Math.max(0, base - reduction));
 }
@@ -96,59 +165,59 @@ function applyBands(income, bands){
   return round2(tax);
 }
 
-function incomeTaxAnnual(region, adjustedNetIncome, taxCode){
+function incomeTaxAnnual(region, adjustedNetIncome, taxCode, ty){
   const parsed = parseTaxCode(taxCode);
   if(parsed.isNoTax) return 0;
 
   const income = Math.max(0, adjustedNetIncome);
   if(parsed.flatRate != null) return round2(income * parsed.flatRate);
 
-  const allowance = clamp(personalAllowance(income, taxCode), 0, income);
+  const allowance = clamp(personalAllowance(income, taxCode, ty), 0, income);
 
   if(region === 'scotland'){
     const bands = [
       { upper: allowance, rate: 0.00 },
-      { upper: TY.scStarterUpper, rate: 0.19 },
-      { upper: TY.scBasicUpper, rate: 0.20 },
-      { upper: TY.scIntermediateUpper, rate: 0.21 },
-      { upper: TY.scHigherUpper, rate: 0.42 },
-      { upper: TY.scAdvancedUpper, rate: 0.45 },
+      { upper: ty.scStarterUpper, rate: 0.19 },
+      { upper: ty.scBasicUpper, rate: 0.20 },
+      { upper: ty.scIntermediateUpper, rate: 0.21 },
+      { upper: ty.scHigherUpper, rate: 0.42 },
+      { upper: ty.scAdvancedUpper, rate: 0.45 },
       { upper: Infinity, rate: 0.48 },
     ];
     return applyBands(income, bands);
   } else {
     const bands = [
       { upper: allowance, rate: 0.00 },
-      { upper: TY.ewHigherRateStarts, rate: 0.20 },
-      { upper: TY.additionalRateStarts, rate: 0.40 },
+      { upper: ty.ewHigherRateStarts, rate: 0.20 },
+      { upper: ty.additionalRateStarts, rate: 0.40 },
       { upper: Infinity, rate: 0.45 },
     ];
     return applyBands(income, bands);
   }
 }
 
-function nationalInsuranceAnnual(annualEarnings){
+function nationalInsuranceAnnual(annualEarnings, ty){
   const e = Math.max(0, annualEarnings);
-  const pt = TY.niPrimaryThreshold;
-  const uel = TY.niUpperEarningsLimit;
+  const pt = ty.niPrimaryThreshold;
+  const uel = ty.niUpperEarningsLimit;
   if(e <= pt) return 0;
   const mainBand = Math.min(e, uel) - pt;
   const upperBand = Math.max(0, e - uel);
-  return round2(mainBand * TY.niMainRate + upperBand * TY.niUpperRate);
+  return round2(mainBand * ty.niMainRate + upperBand * ty.niUpperRate);
 }
 
-function studentLoanAnnual(plan, annualEarnings){
+function studentLoanAnnual(plan, annualEarnings, ty){
   const e = Math.max(0, annualEarnings);
   if(plan === 'none') return 0;
 
   let threshold = 0;
-  let rate = TY.slPlanRate;
+  let rate = ty.slPlanRate;
 
-  if(plan === 'plan1') threshold = TY.slPlan1Threshold;
-  if(plan === 'plan2') threshold = TY.slPlan2Threshold;
-  if(plan === 'plan4') threshold = TY.slPlan4Threshold;
-  if(plan === 'plan5') threshold = TY.slPlan5Threshold;
-  if(plan === 'postgraduate'){ threshold = TY.slPostgradThreshold; rate = TY.slPostgradRate; }
+  if(plan === 'plan1') threshold = ty.slPlan1Threshold;
+  if(plan === 'plan2') threshold = ty.slPlan2Threshold;
+  if(plan === 'plan4') threshold = ty.slPlan4Threshold;
+  if(plan === 'plan5') threshold = ty.slPlan5Threshold;
+  if(plan === 'postgraduate'){ threshold = ty.slPostgradThreshold; rate = ty.slPostgradRate; }
 
   if(e <= threshold) return 0;
   return round2((e - threshold) * rate);
@@ -161,9 +230,10 @@ function compute(input){
 
   const base = Math.max(0, input.salarySacrifice ? (gross - pension) : gross);
 
-  const tax = incomeTaxAnnual(input.region, base, input.taxCode);
-  const ni = nationalInsuranceAnnual(base);
-  const sl = studentLoanAnnual(input.studentLoan, base);
+  const ty = getTY();
+  const tax = incomeTaxAnnual(input.region, base, input.taxCode, ty);
+  const ni = nationalInsuranceAnnual(base, ty);
+  const sl = studentLoanAnnual(input.studentLoan, base, ty);
 
   const net = round2(gross - tax - ni - sl - pension);
 
@@ -258,6 +328,7 @@ function renderResults(b){
 }
 
 function getInputFromUI(){
+  const taxYear = document.getElementById('taxYear')?.value || currentTaxYear;
   const region = document.getElementById('region').value;
   const mode = document.getElementById('mode').value;
   const taxCode = (document.getElementById('taxCode').value || '1257L').trim() || '1257L';
@@ -274,7 +345,7 @@ function getInputFromUI(){
     grossAnnual = hourlyRate * hoursPerWeek * 52;
   }
 
-  return { region, mode, taxCode, pensionPercent, salarySacrifice, studentLoan, grossAnnual };
+  return { taxYear, region, mode, taxCode, pensionPercent, salarySacrifice, studentLoan, grossAnnual };
 }
 
 function syncModeUI(){
@@ -414,12 +485,29 @@ function sfClear(){
   validateAllInputs();
 }
 
+
+// Last used inputs (auto-restore)
+const LAST_KEY = 'wagewiseuk_laststate_v1';
+function loadLastState(){
+  try{ return JSON.parse(localStorage.getItem(LAST_KEY) || 'null'); }catch(e){ return null; }
+}
+function saveLastState(state){
+  try{ localStorage.setItem(LAST_KEY, JSON.stringify(state || {})); }catch(e){}
+}
+let lastSaveT = null;
+function scheduleLastStateSave(){
+  clearTimeout(lastSaveT);
+  lastSaveT = setTimeout(() => {
+    saveLastState(getScenarioState());
+  }, 350);
+}
+
 // Scenarios
 const SC_KEY = 'wagewiseuk_scenarios_v1';
 function loadScenarios(){ try{ return JSON.parse(localStorage.getItem(SC_KEY) || '{}'); } catch(e){ return {}; } }
 function saveScenarios(obj){ localStorage.setItem(SC_KEY, JSON.stringify(obj || {})); }
 function getScenarioState(){
-  const ids = ['region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCode','pensionPercent','salarySacrifice','studentLoan','sfFrequency','sfP1','sfP2','sfP3','sfP4'];
+  const ids = ['taxYear','region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCode','pensionPercent','salarySacrifice','studentLoan','sfFrequency','sfP1','sfP2','sfP3','sfP4'];
   const state = {};
   for(const id of ids){
     const el = document.getElementById(id);
@@ -430,6 +518,7 @@ function getScenarioState(){
 }
 function applyScenarioState(state){
   if(!state) return;
+  if(state.taxYear) setTaxYear(String(state.taxYear));
   Object.entries(state).forEach(([id,val]) => {
     const el = document.getElementById(id);
     if(!el) return;
@@ -509,6 +598,47 @@ function wireCopyButtons(){
   a.addEventListener('click', () => { if(!lastResult) return toast('Calculate first'); copyText(lastResult.netAnnual.toFixed(2),'Annual take-home'); });
   w.addEventListener('click', () => { if(!lastResult) return toast('Calculate first'); copyText(lastResult.netWeekly.toFixed(2),'Weekly take-home'); });
 }
+
+
+function wireTaxYearSelector(){
+  const sel = document.getElementById('taxYear');
+  if(!sel) return;
+  sel.addEventListener('change', () => setTaxYear(sel.value));
+}
+
+function buildShareSummary(){
+  if(!lastResult) return null;
+  const input = getInputFromUI();
+  return [
+    `WageWise UK (${currentTaxYear})`,
+    `Gross (annual): ${currencyGBP(lastResult.grossAnnual)}`,
+    `Take-home (annual): ${currencyGBP(lastResult.netAnnual)}`,
+    `Take-home (monthly): ${currencyGBP(lastResult.netMonthly)}`,
+    `Take-home (weekly): ${currencyGBP(lastResult.netWeekly)}`,
+    `Tax: ${currencyGBP(lastResult.incomeTaxAnnual)} • NI: ${currencyGBP(lastResult.nationalInsuranceAnnual)} • SL: ${currencyGBP(lastResult.studentLoanAnnual)} • Pension: ${currencyGBP(lastResult.pensionAnnual)}`,
+    `Region: ${input.region} • Tax code: ${input.taxCode} • Student loan: ${input.studentLoan}`
+  ].join('\n');
+}
+
+function wireShareButton(){
+  const btn = document.getElementById('shareBtn');
+  if(!btn) return;
+  btn.addEventListener('click', async () => {
+    if(!lastResult) return toast('Calculate first');
+    const text = buildShareSummary();
+    try{
+      if(navigator.share){
+        await navigator.share({ title: 'WageWise UK', text });
+        toast('Shared');
+      } else {
+        await copyText(text, 'Summary');
+      }
+    }catch(e){
+      // user cancelled share is fine
+    }
+  });
+}
+
 
 // Auto-calc
 let debounceT = null;
@@ -648,7 +778,15 @@ document.getElementById('mode').addEventListener('change', () => { syncModeUI();
 
 document.getElementById('calcBtn').addEventListener('click', () => { try{ runCalculation(); } catch(e){ console.error(e); toast('Error: check inputs'); } });
 
-document.getElementById('resetBtn').addEventListener('click', () => { if(!confirm('Clear all inputs?')) return; resetUI(); syncModeUI(); });
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if(!confirm('Clear all inputs?')) return;
+  try{ localStorage.removeItem(LAST_KEY); }catch(e){}
+  try{ localStorage.removeItem(TAXYEAR_KEY); }catch(e){}
+  setTaxYear('2025/26');
+  resetUI();
+  syncModeUI();
+  toast('Cleared');
+});
 
 document.getElementById('sfEstimateBtn').addEventListener('click', () => {
   validateAllInputs();
@@ -661,6 +799,14 @@ wireScenarioButtons();
 wireCopyButtons();
 
 // boot
+// Restore tax year preference first
+try{
+  const savedTY = localStorage.getItem(TAXYEAR_KEY);
+  if(savedTY && TAX_YEARS[savedTY]) currentTaxYear = savedTY;
+}catch(e){}
+applyTaxYearToUI();
+wireTaxYearSelector();
+
 resetUI();
 syncModelUI();
 wireViewSwitcher();
@@ -671,5 +817,25 @@ if (footerVersion) {
   footerVersion.textContent = "WageWise UK • v" + APP_VERSION;
 }
 
-// initial validation state
-validateAllInputs();
+// Auto-restore last used inputs (if present)
+const last = loadLastState();
+if(last){
+  applyScenarioState(last);
+} else {
+  // ensure at least one clean validation pass on first load
+  validateAllInputs();
+}
+
+// Wire sharing + autosave
+wireShareButton();
+
+// save last-used inputs while typing (covers both tabs)
+[
+  'taxYear','region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCode','pensionPercent',
+  'salarySacrifice','studentLoan','sfFrequency','sfP1','sfP2','sfP3','sfP4'
+].forEach(id => {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', scheduleLastStateSave);
+  el.addEventListener('change', scheduleLastStateSave);
+});
