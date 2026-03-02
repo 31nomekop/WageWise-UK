@@ -353,17 +353,23 @@ button.ghost{background: transparent}
 .switcher .seg{ padding: 10px 16px; border-radius: 999px; }
 .helpBtn{
   margin-left: 6px;
-  width: 18px; height: 18px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.18);
   background: rgba(255,255,255,.06);
   color: rgba(255,255,255,.85);
   font-size: 12px;
+  font-weight: 700;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   display:inline-grid;
   place-items:center;
   line-height: 1;
   vertical-align: middle;
   cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .helpBtn.inline{ margin-left: 10px; transform: none; }
 .helpBtn:active{ transform: scale(.98); }
@@ -373,6 +379,14 @@ button.ghost{background: transparent}
   line-height: 1.35;
   color: rgba(255,255,255,.72);
 }
+
+/* Keep label text + help icon aligned on one line (prevents iOS Safari baseline shift) */
+.field > span{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.field > span .helpBtn{ flex: 0 0 auto; }
 .taxcodeRow{
   display: flex;
   gap: 10px;
