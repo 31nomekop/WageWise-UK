@@ -1,4 +1,4 @@
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.2.1";
 // WageWise UK (PWA) — 2025/26 PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
@@ -84,11 +84,9 @@ function applyTaxYearToUI(){
   const sel = document.getElementById("taxYear");
   if(sel) sel.value = currentTaxYear;
 
-  // Update badge text if present
-  const badgeRow = document.querySelector(".badgeRow");
-  if(badgeRow){
-    badgeRow.setAttribute("aria-label", "Tax year " + currentTaxYear);
-  }
+  // Update "Important" copy (index.html)
+  const imp = document.getElementById("importantTaxYear");
+  if(imp) imp.textContent = currentTaxYear;
 }
 
 function setTaxYear(year){

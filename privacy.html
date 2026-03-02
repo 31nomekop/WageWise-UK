@@ -31,7 +31,7 @@
   </main>
 
   <footer class="foot">
-    <span>WageWise UK • v1.0</span>
+    <div class="footer-version"></div>
     <nav class="footerLinks" aria-label="Footer links">
       <a href="about.html">About</a>
       <span aria-hidden="true">•</span>
@@ -40,5 +40,12 @@
       <a href="disclaimer.html">Disclaimer</a>
     </nav>
   </footer>
+
+  <script>
+    (function(){
+      var el = document.querySelector('.footer-version');
+      if(el) el.textContent = 'WageWise UK • v1.2.1';
+    })();
+  </script>
 </body>
 </html>

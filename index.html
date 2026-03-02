@@ -37,9 +37,9 @@
 
   <main class="wrap">
 
-    <div class="badgeRow" aria-label="Tax year">
-      <div class="badge">🇬🇧 UK Tax Year</div>
-      <label class="badgeSelect" aria-label="Select tax year">
+        <div class="taxYearRow" aria-label="Tax year selector">
+      <label class="taxYearPill" aria-label="Select UK tax year">
+        <span class="taxYearPillLabel">Tax year</span>
         <select id="taxYear">
           <option value="2025/26">2025/26 (current)</option>
           <option value="2024/25">2024/25</option>
@@ -266,7 +266,7 @@
     <section class="card">
       <h2>Important</h2>
       <p class="fine">
-        This is an estimator for the <strong>2025/26 UK tax year</strong> (PAYE). Real payslips can differ due to payroll periods,
+        This estimator uses UK PAYE Income Tax, National Insurance, and Student Loan rules for the <strong><span id="importantTaxYear">2025/26</span> tax year</strong> (selected above). Real payslips can differ due to payroll periods,
         benefits, tax code adjustments, and employer pension rules.
       </p>
       <p class="fine">

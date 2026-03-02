@@ -123,6 +123,43 @@ button.ghost{background: transparent}
   flex-wrap:wrap;
   margin-top:6px;
 }
+
+/* Tax year pill (v1.2.1) */
+.taxYearRow{
+  display:flex;
+  align-items:center;
+  margin-top:6px;
+}
+.taxYearPill{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(242,245,247,.92);
+  font-size:12px;
+  line-height:1;
+}
+.taxYearPillLabel{
+  opacity:.92;
+  white-space:nowrap;
+}
+.taxYearPill select{
+  appearance:none;
+  -webkit-appearance:none;
+  border:0;
+  background:transparent;
+  color: rgba(242,245,247,.92);
+  padding:0;
+  margin:0;
+  font-size:12px;
+  line-height:1;
+  outline:none;
+}
+/* iOS sometimes nudges native selects; keep it visually centred */
+.taxYearPill select::-ms-expand{ display:none; }
 .badgeRow .badge{ margin-top:0; }
 .badgeSelect select{
   appearance:none;
@@ -292,4 +329,10 @@ button.ghost{background: transparent}
 .invalid{
   border-color: rgba(255, 107, 107, .70) !important;
   box-shadow: 0 0 0 2px rgba(255, 107, 107, .16) !important;
+}
+
+.badgeSelect{
+  display:inline-flex;
+  align-items:center;
+  margin-top:6px;
 }
