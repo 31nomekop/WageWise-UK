@@ -41,11 +41,17 @@
     </nav>
   </footer>
 
+  
   <script>
     (function(){
       var el = document.querySelector('.footer-version');
-      if(el) el.textContent = 'WageWise UK • v1.2.1';
+      if(!el) return;
+      fetch('app.js', {cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+        var m = t.match(/APP_VERSION\s*=\s*"([^"]+)"/);
+        if(m) el.textContent = 'WageWise UK • v' + m[1];
+      }).catch(function(){});
     })();
   </script>
+
 </body>
 </html>

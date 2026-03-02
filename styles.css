@@ -336,3 +336,40 @@ button.ghost{background: transparent}
   align-items:center;
   margin-top:6px;
 }
+
+
+/* v1.3.0 Product Mode additions */
+.topbar{
+  background: linear-gradient(180deg, rgba(16,20,28,0.95), rgba(16,20,28,0.65));
+  backdrop-filter: blur(10px);
+}
+.brand .mark img{ border-radius: 14px; }
+.subtitle{ opacity: .85; }
+.switcher .seg{ padding: 10px 16px; border-radius: 999px; }
+.helpBtn{
+  margin-left: 6px;
+  width: 22px; height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.85);
+  font-size: 12px;
+  line-height: 20px;
+  cursor: pointer;
+}
+.helpBtn.inline{ margin-left: 10px; transform: translateY(2px); }
+.helpBtn:active{ transform: scale(.98); }
+.helpText{
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(255,255,255,.72);
+}
+.taxcodeRow{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.taxcodeRow select, .taxcodeRow input{
+  flex: 1;
+}

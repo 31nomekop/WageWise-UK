@@ -21,11 +21,11 @@
   <header class="topbar">
     <div class="brand">
       <div class="mark" aria-hidden="true">
-        <img src="icon-192.png" alt="" width="42" height="42" />
+        <img src="icon-192.png" alt="" width="44" height="44" />
       </div>
       <div>
         <div class="title">WageWise UK</div>
-        <div class="subtitle">Take-home pay, clearly • Tax year selectable</div>
+        <div class="subtitle">Take-home pay, clearly</div>
       </div>
     </div>
 
@@ -54,15 +54,17 @@
         <div class="grid">
           <div id="annualBox">
             <label class="field">
-              <span>Annual salary (£)</span>
+              <span>Annual salary (£) <button class="helpBtn" type="button" data-help="help_annualSalary" aria-label="Help: Annual salary (£)">ⓘ</button></span>
               <input id="annualSalary" inputmode="decimal" placeholder="e.g. 30000" />
+              <div class="helpText" id="help_annualSalary" hidden>Enter your <strong>gross</strong> yearly salary before tax (the amount on your contract), not what hits your bank.</div>
               <div class="fieldError" id="err_annualSalary" aria-live="polite"></div>
             </label>
           </div>
 
           <label class="field">
-            <span>Pension %</span>
+            <span>Pension % <button class="helpBtn" type="button" data-help="help_pension" aria-label="Help: Pension %">ⓘ</button></span>
             <input id="pensionPercent" inputmode="decimal" placeholder="e.g. 5" />
+            <div class="helpText" id="help_pension" hidden>Enter your <strong>employee</strong> pension contribution percentage. Check your payslip for a line like “Pension 4%”.</div>
             <div class="fieldError" id="err_pensionPercent" aria-live="polite"></div>
           </label>
 
@@ -70,7 +72,8 @@
             <input id="salarySacrifice" type="checkbox" />
             <div>
               <strong>Salary sacrifice pension</strong>
-              <div class="sub">If enabled, pension reduces Income Tax, NI, and Student Loan bases.</div>
+              <div class="sub">If enabled, pension reduces Income Tax, NI, and Student Loan bases.
+              <div class="helpText" id="help_salarySac" hidden>Only enable if your workplace pension is set up as <strong>salary sacrifice</strong>. If unsure, leave it off.</div></div>
             </div>
           </label>
         </div>
@@ -110,13 +113,31 @@
               </label>
             </div>
 
+            
             <label class="field">
-              <span>Tax code</span>
-              <input id="taxCode" placeholder="1257L" />
+              <span>Tax code <button class="helpBtn" type="button" data-help="help_taxCode" aria-label="Help: tax code">ⓘ</button></span>
+              <div class="taxcodeRow">
+                <select id="taxCodePreset">
+                  <option value="1257L">1257L (standard)</option>
+                  <option value="BR">BR (basic rate)</option>
+                  <option value="0T">0T (no allowance)</option>
+                  <option value="NT">NT (no tax)</option>
+                  <option value="D0">D0 (higher rate)</option>
+                  <option value="D1">D1 (additional rate)</option>
+                  <option value="custom">Custom…</option>
+                </select>
+                <input id="taxCodeCustom" placeholder="e.g. 1185L" style="display:none" />
+                <div class="fieldError" id="err_taxCodeCustom" aria-live="polite"></div>
+              </div>
+              <div class="helpText" id="help_taxCode" hidden>
+                Usually <strong>1257L</strong>. You’ll find your tax code on your payslip or HMRC app.
+                If unsure, leave the default.
+              </div>
             </label>
 
+
             <label class="field">
-              <span>Student loan</span>
+              <span>Student loan <button class="helpBtn" type="button" data-help="help_studentLoan" aria-label="Help: Student loan">ⓘ</button></span>
               <select id="studentLoan">
                 <option value="none">None</option>
                 <option value="plan1">Plan 1</option>
@@ -125,6 +146,7 @@
                 <option value="plan5">Plan 5</option>
                 <option value="postgraduate">Postgraduate</option>
               </select>
+              <div class="helpText" id="help_studentLoan" hidden>Select the student loan plan shown on your payslip. If you’re below the threshold, repayment will be £0.</div>
             </label>
           </div>
         </details>
@@ -215,18 +237,32 @@
 
         <div class="grid">
           <label class="field">
-            <span>Pay frequency</span>
+            <span>Pay frequency <button class="helpBtn" type="button" data-help="help_sfFrequency" aria-label="Help: Pay frequency">ⓘ</button></span>
             <select id="sfFrequency">
               <option value="weekly">Weekly</option>
               <option value="fortnightly">Fortnightly</option>
               <option value="fourWeekly">Four-weekly</option>
               <option value="monthly">Monthly</option>
             </select>
+              <div class="helpText" id="help_sfFrequency" hidden>Choose how often you’re paid. Weekly = 52 payslips per year, Monthly = 12.</div>
           </label>
 
           <label class="field">
-            <span>Gross pay (Payslip 1)</span>
+            <span>Figures entered <button class="helpBtn" type="button" data-help="help_sfMode" aria-label="Help: figures entered">ⓘ</button></span>
+            <select id="sfMode">
+              <option value="gross">Gross (from payslip)</option>
+              <option value="net">Take-home (bank)</option>
+            </select>
+            <div class="helpText" id="help_sfMode" hidden>
+              Choose <strong>Gross</strong> if you have payslip gross pay. Choose <strong>Take-home</strong> if you only know the bank amount — WageWise will estimate gross salary based on your assumptions.
+            </div>
+          </label>
+
+
+          <label class="field">
+            <span>Gross pay (Payslip 1) <button class="helpBtn" type="button" data-help="help_sfGross" aria-label="Help: Gross pay (Payslip 1)">ⓘ</button></span>
             <input id="sfP1" inputmode="decimal" placeholder="e.g. 420.50" />
+            <div class="helpText" id="help_sfGross" hidden>Use the <strong>Gross pay</strong> figure from your payslip. If you only know what hit your bank, switch Salary Finder to “Take‑home (bank)”.</div>
             <div class="fieldError" id="err_sfP1" aria-live="polite"></div>
           </label>
           <label class="field">

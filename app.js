@@ -1,4 +1,4 @@
-const APP_VERSION = "1.2.1";
+const APP_VERSION = "1.3.0";
 // WageWise UK (PWA) — 2025/26 PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
@@ -329,7 +329,9 @@ function getInputFromUI(){
   const taxYear = document.getElementById('taxYear')?.value || currentTaxYear;
   const region = document.getElementById('region').value;
   const mode = document.getElementById('mode').value;
-  const taxCode = (document.getElementById('taxCode').value || '1257L').trim() || '1257L';
+  const preset = (document.getElementById('taxCodePreset')?.value || '1257L').trim();
+  const custom = (document.getElementById('taxCodeCustom')?.value || '').trim();
+  const taxCode = (preset === 'custom' ? (custom || '1257L') : (preset || '1257L')).toUpperCase();
   const pensionPercent = parseMoney(document.getElementById('pensionPercent').value) ?? 0;
   const salarySacrifice = document.getElementById('salarySacrifice').checked;
   const studentLoan = document.getElementById('studentLoan').value;
@@ -423,6 +425,15 @@ function validateAllInputs(){
   if(!pen.blank && !pen.ok) setFieldError('pensionPercent','err_pensionPercent','Pension must be a number (0–100).');
   if(pen.ok && pen.n > 100) setFieldError('pensionPercent','err_pensionPercent','Pension cannot be over 100%.');
 
+  // Tax code validation (light)
+  const presetTC = (document.getElementById('taxCodePreset')?.value || '1257L');
+  const customTC = (document.getElementById('taxCodeCustom')?.value || '').trim().toUpperCase();
+  if(presetTC === 'custom' && customTC){
+    const ok = /^(NT|BR|D0|D1|0T|K\d+|\d+[A-Z])$/.test(customTC);
+    if(!ok) setFieldError('taxCodeCustom','err_taxCodeCustom','Check your tax code format (e.g. 1257L, BR, 0T).');
+  }
+
+
   // Salary Finder validation (only if values are entered)
   ['sfP1','sfP2','sfP3','sfP4'].forEach(id => {
     const v = readNonNegNumber(id);
@@ -431,6 +442,26 @@ function validateAllInputs(){
 }
 
 // Salary Finder
+function sfSolveGrossFromNet(targetNetAnnual, assumptions){
+  // Binary search gross salary so compute() netAnnual matches target net.
+  // assumptions: {region,taxCode,pensionPercent,salarySacrifice,studentLoan}
+  let lo = 0, hi = 300000; // plenty for typical users
+  for(let i=0;i<28;i++){
+    const mid = (lo + hi) / 2;
+    const out = compute({
+      grossAnnual: mid,
+      region: assumptions.region,
+      taxCode: assumptions.taxCode,
+      pensionPercent: assumptions.pensionPercent,
+      salarySacrifice: assumptions.salarySacrifice,
+      studentLoan: assumptions.studentLoan
+    });
+    if(out.netAnnual < targetNetAnnual) lo = mid;
+    else hi = mid;
+  }
+  return round2((lo+hi)/2);
+}
+
 function sfMultiplier(freq){
   if(freq === 'weekly') return 52;
   if(freq === 'fortnightly') return 26;
@@ -449,18 +480,57 @@ function sfEstimate(){
   const out = document.getElementById('sfOutput');
   const applyBtn = document.getElementById('sfApplyBtn');
   if(!out || !applyBtn) return null;
-  const { freq, nums } = sfReadPayslips();
+
+  const { freq, mode, nums } = sfReadPayslips();
   if(nums.length === 0){
-    out.innerHTML = '<div class="hint">Enter at least <strong>1</strong> payslip gross value.</div>';
+    out.innerHTML = '<div class="hint">Add up to 4 payslips, then tap <strong>Estimate</strong>.</div>';
     applyBtn.disabled = true;
     return null;
   }
+
   const avg = nums.reduce((a,b)=>a+b,0) / nums.length;
-  const annual = round2(avg * sfMultiplier(freq));
+  const annualFromEntry = round2(avg * sfMultiplier(freq));
+
+  // Assumptions from calculator (region, pension, tax code, student loan)
+  const calc = getInputFromUI();
+  const baseAssumptions = {
+    region: calc.region,
+    pensionPercent: calc.pensionPercent,
+    salarySacrifice: calc.salarySacrifice,
+    studentLoan: calc.studentLoan
+  };
+
+  let annual = annualFromEntry;
+  let rangeMin = null, rangeMax = null;
+  let modeLabel = (mode === 'net') ? 'take-home (bank)' : 'gross (payslip)';
+
+  if(mode === 'net'){
+    const targetNet = annualFromEntry;
+    const codes = [
+      calc.taxCode || '1257L',
+      '1257L',
+      'BR',
+      '0T'
+    ].filter((v,i,arr)=>arr.indexOf(v)===i);
+
+    const estimates = codes.map(code => sfSolveGrossFromNet(targetNet, { ...baseAssumptions, taxCode: code }));
+    annual = estimates[0];
+    rangeMin = Math.min(...estimates);
+    rangeMax = Math.max(...estimates);
+  }
+
+  sfLastAnnual = annual;
+
+  const pretty = currencyGBP(annual, 0);
+  const hintRange = (rangeMin != null && rangeMax != null && Math.abs(rangeMax-rangeMin) >= 10)
+    ? `<div class="hint">Range: <strong>${currencyGBP(rangeMin,0)}</strong> – <strong>${currencyGBP(rangeMax,0)}</strong> (varies mainly by tax code)</div>`
+    : '';
+
   out.innerHTML = `
-    <div class="row"><div>Average gross per payslip</div><div><strong>${currencyGBP(round2(avg))}</strong></div></div>
-    <div class="row"><div>Estimated annual gross salary</div><div><strong>${currencyGBP(annual)}</strong></div></div>
-    <div class="hint">Tip: tap <strong>Use as annual salary</strong> to auto-fill the calculator.</div>
+    <div class="big">Estimated annual salary: <strong>${pretty}</strong></div>
+    <div class="muted">Based on ${nums.length} ${modeLabel} value(s), paid <strong>${freq.replace(/([A-Z])/g,' $1')}</strong>.</div>
+    ${hintRange}
+    <div class="hint">Tip: tap <strong>Use as annual salary</strong> to auto-fill the calculator with the same assumptions.</div>
   `;
   applyBtn.disabled = false;
   return annual;
@@ -505,7 +575,7 @@ const SC_KEY = 'wagewiseuk_scenarios_v1';
 function loadScenarios(){ try{ return JSON.parse(localStorage.getItem(SC_KEY) || '{}'); } catch(e){ return {}; } }
 function saveScenarios(obj){ localStorage.setItem(SC_KEY, JSON.stringify(obj || {})); }
 function getScenarioState(){
-  const ids = ['taxYear','region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCode','pensionPercent','salarySacrifice','studentLoan','sfFrequency','sfP1','sfP2','sfP3','sfP4'];
+  const ids = ['taxYear','region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCodePreset','taxCodeCustom','pensionPercent','salarySacrifice','studentLoan','sfFrequency','sfMode','sfP1','sfP2','sfP3','sfP4'];
   const state = {};
   for(const id of ids){
     const el = document.getElementById(id);
@@ -693,7 +763,10 @@ function resetUI(){
   document.getElementById('annualSalary').value = '';
   document.getElementById('hourlyRate').value = '';
   document.getElementById('hoursPerWeek').value = '';
-  document.getElementById('taxCode').value = '1257L';
+  const tcPreset=document.getElementById('taxCodePreset');
+  const tcCustom=document.getElementById('taxCodeCustom');
+  if(tcPreset) tcPreset.value='1257L';
+  if(tcCustom) tcCustom.value='';
   document.getElementById('pensionPercent').value = '';
   document.getElementById('salarySacrifice').checked = false;
   document.getElementById('studentLoan').value = 'none';
@@ -793,6 +866,61 @@ document.getElementById('sfEstimateBtn').addEventListener('click', () => {
 document.getElementById('sfApplyBtn').addEventListener('click', () => { sfApplyToCalculator(sfLastAnnual); });
 document.getElementById('sfClearBtn').addEventListener('click', () => { sfClear(); });
 
+
+function wireTaxCodeUI(){
+  const preset = document.getElementById('taxCodePreset');
+  const custom = document.getElementById('taxCodeCustom');
+  if(!preset || !custom) return;
+  function sync(){
+    const isCustom = preset.value === 'custom';
+    custom.style.display = isCustom ? '' : 'none';
+    const err = document.getElementById('err_taxCodeCustom');
+    if(err) err.textContent = '';
+    validateAllInputs();
+  }
+  preset.addEventListener('change', sync);
+  custom.addEventListener('input', () => { if(preset.value !== 'custom') return; validateAllInputs(); scheduleLastStateSave(); });
+  sync();
+}
+
+function wireHelpToggles(){
+  document.querySelectorAll('.helpBtn[data-help]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-help');
+      const el = document.getElementById(id);
+      if(!el) return;
+      const isHidden = el.hasAttribute('hidden');
+      if(isHidden) el.removeAttribute('hidden');
+      else el.setAttribute('hidden','');
+    });
+  });
+}
+
+function wireSalaryFinderMode(){
+  const mode = document.getElementById('sfMode');
+  if(!mode) return;
+  const labels = ['sfP1','sfP2','sfP3','sfP4'].map(id => document.getElementById(id)?.closest('label'));
+  function apply(){
+    const isNet = mode.value === 'net';
+    labels.forEach((lab,i) => {
+      const span = lab?.querySelector('span');
+      if(span){
+        span.childNodes[0].nodeValue = (isNet ? `Take-home (Payslip ${i+1})` : `Gross pay (Payslip ${i+1})`) + ' ';
+      }
+      const inp = lab?.querySelector('input');
+      if(inp) inp.placeholder = isNet ? 'e.g. 1721.91' : 'e.g. 420.50';
+    });
+    const help = document.getElementById('help_sfGross');
+    if(help){
+      help.innerHTML = isNet
+        ? 'Enter the <strong>bank (take-home)</strong> amount. WageWise will estimate gross salary using your assumptions in Calculator → More options.'
+        : 'Use the <strong>Gross pay</strong> figure from your payslip. If you only know what hit your bank, switch to <strong>Take-home (bank)</strong>.';
+    }
+  }
+  mode.addEventListener('change', () => { apply(); validateAllInputs(); scheduleLastStateSave(); });
+  apply();
+}
+
 wireScenarioButtons();
 wireCopyButtons();
 
@@ -808,6 +936,9 @@ wireTaxYearSelector();
 resetUI();
 syncModelUI();
 wireViewSwitcher();
+wireTaxCodeUI();
+wireHelpToggles();
+wireSalaryFinderMode();
 setActiveView('calc');
 
 const footerVersion = document.querySelector(".footer-version");
@@ -829,8 +960,8 @@ wireShareButton();
 
 // save last-used inputs while typing (covers both tabs)
 [
-  'taxYear','region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCode','pensionPercent',
-  'salarySacrifice','studentLoan','sfFrequency','sfP1','sfP2','sfP3','sfP4'
+  'taxYear','region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCodePreset','taxCodeCustom','pensionPercent',
+  'salarySacrifice','studentLoan','sfFrequency','sfMode','sfP1','sfP2','sfP3','sfP4'
 ].forEach(id => {
   const el = document.getElementById(id);
   if(!el) return;

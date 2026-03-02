@@ -1,4 +1,4 @@
-const CACHE = "wagewiseuk-v1.2.1";
+const CACHE = "wagewiseuk-v1.3.0";
 const ASSETS = [
   './',
   './index.html',
