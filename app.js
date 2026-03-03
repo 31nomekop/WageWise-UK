@@ -1,4 +1,4 @@
-const APP_VERSION = "1.3.5";
+const APP_VERSION = "1.3.6";
 // WageWise UK (PWA) — 2025/26 PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
@@ -112,7 +112,14 @@ function parseMoney(input){
   if(input == null) return null;
   const t = String(input).trim();
   if(!t) return null;
-  const n = Number(t.replace(/,/g,''));
+
+  // Accept common user formats: "£1,234.56", "1 234.56"
+  const cleaned = t
+    .replace(/£/g, '')
+    .replace(/\s+/g, '')
+    .replace(/,/g, '');
+
+  const n = Number(cleaned);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -125,39 +132,48 @@ function parseTaxCode(raw){
   const code = String(raw || '').trim().toUpperCase();
 
   // Common special codes
-  if(code === 'NT') return { isNoTax:true, allowanceOverride:null, flatRate:null };
-  if(code === 'BR') return { isNoTax:false, allowanceOverride:0, flatRate:0.20 };
-  if(code === 'D0') return { isNoTax:false, allowanceOverride:0, flatRate:0.40 };
-  if(code === 'D1') return { isNoTax:false, allowanceOverride:0, flatRate:0.45 };
+  if(code === 'NT') return { isNoTax:true, allowanceOverride:null, flatRate:null, isK:false };
+  if(code === 'BR') return { isNoTax:false, allowanceOverride:0, flatRate:0.20, isK:false };
+  if(code === 'D0') return { isNoTax:false, allowanceOverride:0, flatRate:0.40, isK:false };
+  if(code === 'D1') return { isNoTax:false, allowanceOverride:0, flatRate:0.45, isK:false };
 
-  // 0T = zero personal allowance
-  if(code === '0T') return { isNoTax:false, allowanceOverride:0, flatRate:null };
+  // 0T = zero personal allowance (normal progressive rates)
+  if(code === '0T') return { isNoTax:false, allowanceOverride:0, flatRate:null, isK:false };
 
   // K codes = negative allowance (adds to taxable pay)
   const km = code.match(/^K(\d+)$/);
   if(km){
     const n = parseInt(km[1], 10);
-    if(Number.isFinite(n) && n >= 0) return { isNoTax:false, allowanceOverride: -(n * 10), flatRate:null };
+    if(Number.isFinite(n) && n >= 0) return { isNoTax:false, allowanceOverride: -(n * 10), flatRate:null, isK:true };
   }
 
   // Standard numeric tax codes (e.g. 1257L, 1257M, 1257N)
   const m = code.match(/^([0-9]+)/);
   if(m){
     const n = parseInt(m[1], 10);
-    // Allow 0 here (but 0T handled above). 0L etc -> 0 allowance.
-    if(Number.isFinite(n) && n >= 0) return { isNoTax:false, allowanceOverride: n * 10, flatRate:null };
+    if(Number.isFinite(n) && n >= 0) return { isNoTax:false, allowanceOverride: n * 10, flatRate:null, isK:false };
   }
 
   // Unknown / blank => use default allowance rules
-  return { isNoTax:false, allowanceOverride:null, flatRate:null };
+  return { isNoTax:false, allowanceOverride:null, flatRate:null, isK:false };
 }
 
 function personalAllowance(adjustedNetIncome, taxCode, ty){
   const parsed = parseTaxCode(taxCode);
+
+  // NT: treat as fully covered (so taxable = 0)
   if(parsed.isNoTax) return adjustedNetIncome;
 
+  // If the tax code explicitly sets an allowance (including K codes), use it.
   const base = (parsed.allowanceOverride != null) ? parsed.allowanceOverride : ty.standardPersonalAllowance;
+
+  // K codes are negative allowances and should NOT be tapered.
+  if(parsed.isK) return base;
+
+  // 0 or negative allowances just mean no allowance (taper shouldn't make it negative).
   if(base <= 0) return 0;
+
+  // Standard taper above £100k (or year-configured start)
   if(adjustedNetIncome <= ty.allowanceTaperStart) return base;
 
   const over = adjustedNetIncome - ty.allowanceTaperStart;
@@ -184,29 +200,39 @@ function incomeTaxAnnual(region, adjustedNetIncome, taxCode, ty){
   if(parsed.isNoTax) return 0;
 
   const income = Math.max(0, adjustedNetIncome);
+
+  // BR/D0/D1: flat rate on all income (no allowance, no bands)
   if(parsed.flatRate != null) return round2(income * parsed.flatRate);
 
-  const allowance = clamp(personalAllowance(income, taxCode, ty), 0, income);
+  // Tax *taxable income* (income - allowance). Allowance may be negative (K codes),
+  // which correctly increases taxable pay.
+  const allowance = personalAllowance(income, taxCode, ty); // can be negative
+  const taxable = Math.max(0, income - allowance);
 
   if(region === 'scotland'){
+    // Convert Scotland gross thresholds to taxable thresholds by subtracting allowance.
     const bands = [
-      { upper: allowance, rate: 0.00 },
-      { upper: ty.scStarterUpper, rate: 0.19 },
-      { upper: ty.scBasicUpper, rate: 0.20 },
-      { upper: ty.scIntermediateUpper, rate: 0.21 },
-      { upper: ty.scHigherUpper, rate: 0.42 },
-      { upper: ty.scAdvancedUpper, rate: 0.45 },
+      { upper: Math.max(0, ty.scStarterUpper - allowance), rate: 0.19 },
+      { upper: Math.max(0, ty.scBasicUpper - allowance), rate: 0.20 },
+      { upper: Math.max(0, ty.scIntermediateUpper - allowance), rate: 0.21 },
+      { upper: Math.max(0, ty.scHigherUpper - allowance), rate: 0.42 },
+      { upper: Math.max(0, ty.scAdvancedUpper - allowance), rate: 0.45 },
       { upper: Infinity, rate: 0.48 },
     ];
-    return applyBands(income, bands);
+    return applyBands(taxable, bands);
   } else {
+    // England/Wales/NI:
+    // Basic-rate limit is fixed as a *taxable* amount (37,700). This means when
+    // Personal Allowance tapers, the higher-rate threshold shifts automatically.
+    const BASIC_RATE_LIMIT_TAXABLE = 37700;
+    const additionalTaxableStart = Math.max(0, ty.additionalRateStarts - allowance);
+
     const bands = [
-      { upper: allowance, rate: 0.00 },
-      { upper: ty.ewHigherRateStarts, rate: 0.20 },
-      { upper: ty.additionalRateStarts, rate: 0.40 },
+      { upper: BASIC_RATE_LIMIT_TAXABLE, rate: 0.20 },
+      { upper: additionalTaxableStart, rate: 0.40 },
       { upper: Infinity, rate: 0.45 },
     ];
-    return applyBands(income, bands);
+    return applyBands(taxable, bands);
   }
 }
 
