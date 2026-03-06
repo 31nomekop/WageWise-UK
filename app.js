@@ -291,6 +291,8 @@ function compute(input){
 
 function updateUxExtras(b){
   const gross = b.grossAnnual || 0;
+  const uxExtras = document.getElementById('uxExtras');
+  if(uxExtras) uxExtras.hidden = !(gross > 0);
   const tax = b.incomeTaxAnnual || 0;
   const ni = b.nationalInsuranceAnnual || 0;
   const sl = b.studentLoanAnnual || 0;
@@ -530,9 +532,10 @@ function sfMultiplier(freq){
 }
 function sfReadPayslips(){
   const freq = document.getElementById('sfFrequency')?.value || 'weekly';
+  const mode = document.getElementById('sfMode')?.value || 'gross';
   const nums = ['sfP1','sfP2','sfP3','sfP4'].map(id => parseMoney(document.getElementById(id)?.value))
     .filter(v => v != null && v >= 0);
-  return { freq, nums };
+  return { freq, mode, nums };
 }
 let sfLastAnnual = null;
 function sfEstimate(){
