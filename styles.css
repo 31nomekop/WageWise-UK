@@ -487,3 +487,101 @@ button.ghost{background: transparent}
     font-size: 12px;
   }
 }
+
+
+/* v1.4.0 Lock polish */
+button{
+  transition: transform .16s ease, background .16s ease, border-color .16s ease, opacity .16s ease;
+}
+button:active{ transform: scale(.98); }
+input[type="checkbox"]{
+  width: 30px;
+  height: 30px;
+  margin-top: 2px;
+  accent-color: var(--mint);
+}
+.info-page .topbar{
+  align-items: center;
+}
+.info-page .brand{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.info-page .brand h1{
+  margin: 0;
+  font-size: clamp(24px, 4.8vw, 34px);
+  line-height: 1.02;
+}
+.info-page .brand p{
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--muted);
+}
+.info-page .tabs{
+  flex: 0 0 auto;
+  margin-left: 12px;
+}
+.pill.ghost,
+.back-link{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+  color: rgba(242,245,247,.92);
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1;
+}
+.pill.ghost:active,
+.back-link:active{
+  transform: scale(.98);
+  opacity: .92;
+}
+@media (max-width: 760px){
+  .info-page .topbar{
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .info-page .brand{
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .info-page .brand h1{
+    white-space: nowrap;
+  }
+  .info-page .tabs{
+    margin-left: 8px;
+  }
+}
+@media (max-width: 480px){
+  .info-page .topbar{
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .info-page .brand{
+    gap: 10px;
+  }
+  .info-page .mark{
+    width: 64px;
+    flex-basis: 64px;
+  }
+  .info-page .mark img{
+    width: 64px;
+    max-height: 64px;
+    border-radius: 16px;
+  }
+  .info-page .brand h1{
+    font-size: 24px;
+  }
+  .pill.ghost,
+  .back-link{
+    min-height: 36px;
+    padding: 9px 12px;
+    font-size: 14px;
+  }
+}

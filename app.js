@@ -1,4 +1,4 @@
-const APP_VERSION = "1.3.9";
+const APP_VERSION = "1.4.0";
 // WageWise UK (PWA) — 2025/26 PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
