@@ -1,1 +1,0 @@
-# WageWise UK — Fresh PWA build\nUpload these files to your GitHub repo root (replace existing), then refresh the GitHub Pages site.\n
