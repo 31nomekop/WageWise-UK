@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Disclaimer • WageWise UK</title>
+  <meta name="theme-color" content="#10141c" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark"><img src="icon-v2.png" alt="WageWise UK logo"></div>
+      <div>
+        <h1>WageWise UK</h1>
+        <p>Disclaimer</p>
+      </div>
+    </div>
+    <div class="tabs">
+      <a class="pill ghost" href="index.html">Back</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>Disclaimer</h2>
+<p class="fine"><strong>Estimator only:</strong> WageWise UK provides estimates based on the information you enter and common UK PAYE rules. It is not financial, tax or legal advice.</p>
+<p class="fine"><strong>Real payslips can differ:</strong> Your actual pay may vary due to payroll periods, benefits, tax code changes, workplace pension rules, salary sacrifice arrangements and employer-specific deductions.</p>
+<p class="fine"><strong>Official sources:</strong> For official calculations or advice, refer to HMRC guidance or a qualified professional.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="footer-version"></div>
+    <nav class="footerLinks" aria-label="Footer links">
+      <a href="about.html">About</a>
+      <span aria-hidden="true">•</span>
+      <a href="privacy.html">Privacy</a>
+      <span aria-hidden="true">•</span>
+      <a href="disclaimer.html">Disclaimer</a>
+    </nav>
+  </footer>
+
+  
+  <script>
+    (function(){
+      var el = document.querySelector('.footer-version');
+      if(!el) return;
+      fetch('app.js', {cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+        var m = t.match(/APP_VERSION\s*=\s*"([^"]+)"/);
+        if(m) el.textContent = 'WageWise UK • v' + m[1];
+      }).catch(function(){});
+    })();
+  </script>
+
+</body>
+</html>
