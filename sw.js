@@ -1,4 +1,4 @@
-const CACHE = "wagewiseuk-v1.3.8-logo-cleanup";
+const CACHE = "wagewiseuk-v1.3.9-final-polish";
 const ASSETS = [
   './',
   './index.html',

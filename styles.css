@@ -400,3 +400,90 @@ button.ghost{background: transparent}
 .taxcodeRow select, .taxcodeRow input{
   flex: 1;
 }
+
+
+/* v1.3.9 Final polish */
+.topbar{
+  background: linear-gradient(180deg, rgba(18,22,29,0.98), rgba(18,22,29,0.86));
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.brand{
+  min-width: 0;
+  gap: 14px;
+}
+.mark{
+  width: 72px;
+  flex: 0 0 72px;
+}
+.mark img{
+  width: 72px;
+  max-height: 72px;
+  border-radius: 18px;
+  display: block;
+}
+.title{
+  font-size: clamp(24px, 4.8vw, 34px);
+  line-height: 1.02;
+  white-space: nowrap;
+}
+.subtitle{
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.25;
+}
+.switcher{
+  margin-top: 0;
+  flex: 0 0 auto;
+}
+.switcher .seg{
+  min-width: 160px;
+}
+@media (max-width: 760px){
+  .topbar{
+    align-items: flex-start;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .brand{
+    flex: 1 1 100%;
+  }
+  .switcher{
+    width: 100%;
+  }
+  .switcher .seg{
+    min-width: 0;
+  }
+}
+@media (max-width: 480px){
+  .topbar{
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .brand{
+    align-items: center;
+    gap: 12px;
+  }
+  .mark{
+    width: 78px;
+    flex-basis: 78px;
+  }
+  .mark img{
+    width: 78px;
+    max-height: 78px;
+    border-radius: 20px;
+  }
+  .title{
+    font-size: 26px;
+    white-space: normal;
+  }
+  .subtitle{
+    font-size: 11px;
+  }
+  .switcher{
+    gap: 8px;
+  }
+  .switcher .seg{
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+}
