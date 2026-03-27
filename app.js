@@ -62,11 +62,11 @@ const TAX_YEARS = {
     niMainRate: 0.08,
     niUpperRate: 0.02,
 
-    // Student loan thresholds
-    slPlan1Threshold: 26065,
-    slPlan2Threshold: 28470,
-    slPlan4Threshold: 32745,
-    slPlan5Threshold: 25000,
+    // Student loan thresholds (corrected for 2024/25)
+    slPlan1Threshold: 24990,
+    slPlan2Threshold: 27295,
+    slPlan4Threshold: 31395,
+    slPlan5Threshold: null, // Plan 5 not used for 2024/25
     slPostgradThreshold: 21000,
     slPlanRate: 0.09,
     slPostgradRate: 0.06,
@@ -256,7 +256,10 @@ function studentLoanAnnual(plan, annualEarnings, ty){
   if(plan === 'plan1') threshold = ty.slPlan1Threshold;
   if(plan === 'plan2') threshold = ty.slPlan2Threshold;
   if(plan === 'plan4') threshold = ty.slPlan4Threshold;
-  if(plan === 'plan5') threshold = ty.slPlan5Threshold;
+  if(plan === 'plan5'){
+    if (ty.slPlan5Threshold == null) return 0;
+    threshold = ty.slPlan5Threshold;
+  }
   if(plan === 'postgraduate'){ threshold = ty.slPostgradThreshold; rate = ty.slPostgradRate; }
 
   if(e <= threshold) return 0;
@@ -488,7 +491,6 @@ function validateAllInputs(){
     if(!ok) setFieldError('taxCodeCustom','err_taxCodeCustom','Check your tax code format (e.g. 1257L, BR, 0T).');
   }
 
-
   // Salary Finder validation (only if values are entered)
   ['sfP1','sfP2','sfP3','sfP4'].forEach(id => {
     const v = readNonNegNumber(id);
@@ -626,7 +628,6 @@ function sfClear(){
   validateAllInputs();
 }
 
-
 // Last used inputs (auto-restore)
 const LAST_KEY = 'wagewiseuk_laststate_v1';
 function loadLastState(){
@@ -740,7 +741,6 @@ function wireCopyButtons(){
   w.addEventListener('click', () => { if(!lastResult) return toast('Calculate first'); copyText(lastResult.netWeekly.toFixed(2),'Weekly take-home'); });
 }
 
-
 function wireTaxYearSelector(){
   const sel = document.getElementById('taxYear');
   if(!sel) return;
@@ -779,7 +779,6 @@ function wireShareButton(){
     }
   });
 }
-
 
 // Auto-calc
 let debounceT = null;
@@ -872,8 +871,6 @@ if('serviceWorker' in navigator){
   });
 }
 
-
-
 // -------------------- View switcher (Calculator vs Salary Finder) --------------------
 function setActiveView(view){
   const calc = document.getElementById('viewCalc');
@@ -900,7 +897,6 @@ function wireViewSwitcher(){
   tabCalc.addEventListener('click', () => setActiveView('calc'));
   tabSalary.addEventListener('click', () => setActiveView('salary'));
 }
-
 
 // Wire events
 document.getElementById('mode').addEventListener('change', () => { syncModeUI(); validateAllInputs(); scheduleAutoCalc(); });
@@ -937,7 +933,6 @@ document.getElementById('sfEstimateBtn').addEventListener('click', () => {
 });
 document.getElementById('sfApplyBtn').addEventListener('click', () => { sfApplyToCalculator(sfLastAnnual); });
 document.getElementById('sfClearBtn').addEventListener('click', () => { sfClear(); });
-
 
 function wireTaxCodeUI(){
   const preset = document.getElementById('taxCodePreset');
