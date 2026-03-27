@@ -1,4 +1,4 @@
-const APP_VERSION = "1.4.0";
+const APP_VERSION = "1.4.1";
 // WageWise UK (PWA) — 2025/26 PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
@@ -393,9 +393,20 @@ function getInputFromUI(){
 }
 
 function syncModeUI(){
-  const mode = document.getElementById('mode').value;
-  document.getElementById('annualBox').hidden = (mode !== 'annualSalary');
-  document.getElementById('hourlyBox').hidden = (mode === 'annualSalary');
+  const modeEl = document.getElementById('mode');
+  const annualBox = document.getElementById('annualBox');
+  const hourlyBox = document.getElementById('hourlyBox');
+  const advanced = document.getElementById('advancedOptions');
+  if(!modeEl || !annualBox || !hourlyBox) return;
+
+  const mode = modeEl.value;
+  const isAnnual = mode === 'annualSalary';
+
+  annualBox.hidden = !isAnnual;
+  hourlyBox.hidden = isAnnual;
+
+  // If the user switches to hourly mode, auto-open More options so the fields are immediately visible.
+  if(advanced && !isAnnual) advanced.open = true;
 }
 
 // Safety alias (prevents accidental runtime crash if an older call exists)
@@ -912,7 +923,6 @@ document.getElementById('mode').addEventListener('change', () => { syncModeUI();
 document.getElementById('calcBtn').addEventListener('click', () => { try{ runCalculation(); } catch(e){ console.error(e); toast('Error: check inputs'); } });
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-  if(!confirm('Clear all inputs?')) return;
   try{ localStorage.removeItem(LAST_KEY); }catch(e){}
   try{ localStorage.removeItem(TAXYEAR_KEY); }catch(e){}
   setTaxYear('2025/26');

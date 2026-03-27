@@ -1,1 +1,6 @@
-# WageWise UK — Fresh PWA build\nUpload these files to your GitHub repo root (replace existing), then refresh the GitHub Pages site.\n
+# WageWise UK — v1.4.1 fix build
+
+Includes:
+- Reset button now clears immediately
+- Hourly mode auto-opens More options so hourly fields become visible
+- Service worker cache bumped for clean update
