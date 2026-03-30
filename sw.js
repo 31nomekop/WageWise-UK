@@ -1,4 +1,4 @@
-const CACHE = "wagewiseuk-v1.4.1-hourly-reset-fix";
+const CACHE = "wagewiseuk-v1.5.1-locked-stable";
 const ASSETS = [
   './',
   './index.html',

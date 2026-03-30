@@ -5,7 +5,7 @@
   "display": "standalone",
   "background_color": "#0f141c",
   "theme_color": "#10141c",
-  "description": "Take-home pay estimator for UK PAYE. Includes tax year selector (2024/25 & 2025/26), NI, Student Loans, and region-aware tax.",
+  "description": "Take-home pay estimator for UK PAYE. Includes tax year selector (2024/25, 2025/26 & 2026/27), NI, Student Loans, and region-aware tax.",
   "icons": [
     {
       "src": "pwa-192-v2.png",

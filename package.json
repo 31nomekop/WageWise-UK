@@ -1,0 +1,19 @@
+{
+  "name": "wagewise-master-qa-suite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Consolidated Playwright QA suite for WageWise UK phases 1-6.",
+  "scripts": {
+    "test": "playwright test tests --workers=1",
+    "test:all": "playwright test tests --workers=1",
+    "test:phase1": "playwright test tests/phase1 --workers=1",
+    "test:phase2": "playwright test tests/phase2 --workers=1",
+    "test:phase3": "playwright test tests/phase3 --workers=1",
+    "test:phase4": "playwright test tests/phase4 --workers=1",
+    "test:phase5": "playwright test tests/phase5 --workers=1",
+    "test:phase6": "playwright test tests/phase6 --workers=1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

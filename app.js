@@ -1,5 +1,5 @@
-const APP_VERSION = "1.4.1";
-// WageWise UK (PWA) — 2025/26 PAYE estimator (single-file, GitHub Pages friendly)
+const APP_VERSION = "1.5.1";
+// WageWise UK (PWA) — multi-tax-year PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
 window.addEventListener('load', () => {
@@ -12,8 +12,45 @@ window.addEventListener('load', () => {
 });
 
 const TAX_YEARS = {
+  "2026/27": {
+    yearStart: "2026-04-06",
+    label: "2026/27",
+    standardPersonalAllowance: 12570,
+    allowanceTaperStart: 100000,
+    additionalRateStarts: 125140,
+    ewHigherRateStarts: 50270,
+
+    // Scotland (2026/27)
+    scStarterUpper: 16537,
+    scBasicUpper: 29526,
+    scIntermediateUpper: 43662,
+    scHigherUpper: 75000,
+    scAdvancedUpper: 125140,
+
+    // NI (employee)
+    niPrimaryThreshold: 12570,
+    niUpperEarningsLimit: 50270,
+    niMainRate: 0.08,
+    niUpperRate: 0.02,
+
+    // Pension auto-enrolment reference thresholds
+    aeTrigger: 10000,
+    aeLowerQualifying: 6240,
+    aeUpperQualifying: 50270,
+
+    // Student loan thresholds
+    slPlan1Threshold: 26900,
+    slPlan2Threshold: 29385,
+    slPlan4Threshold: 33795,
+    slPlan5Threshold: 25000,
+    slPostgradThreshold: 21000,
+    slPlanRate: 0.09,
+    slPostgradRate: 0.06,
+  },
+
   "2025/26": {
-    label: "2025/26 (current)",
+    yearStart: "2025-04-06",
+    label: "2025/26",
     standardPersonalAllowance: 12570,
     allowanceTaperStart: 100000,
     additionalRateStarts: 125140,
@@ -32,24 +69,30 @@ const TAX_YEARS = {
     niMainRate: 0.08,
     niUpperRate: 0.02,
 
+    // Pension auto-enrolment reference thresholds
+    aeTrigger: 10000,
+    aeLowerQualifying: 6240,
+    aeUpperQualifying: 50270,
+
     // Student loan thresholds
     slPlan1Threshold: 26065,
     slPlan2Threshold: 28470,
     slPlan4Threshold: 32745,
-    slPlan5Threshold: 25000,
+    slPlan5Threshold: null,
     slPostgradThreshold: 21000,
     slPlanRate: 0.09,
     slPostgradRate: 0.06,
   },
 
   "2024/25": {
+    yearStart: "2024-04-06",
     label: "2024/25",
     standardPersonalAllowance: 12570,
     allowanceTaperStart: 100000,
     additionalRateStarts: 125140,
     ewHigherRateStarts: 50270,
 
-    // Scotland (2024/25) — differs vs 2025/26
+    // Scotland (2024/25)
     scStarterUpper: 14876,
     scBasicUpper: 26561,
     scIntermediateUpper: 43662,
@@ -62,11 +105,16 @@ const TAX_YEARS = {
     niMainRate: 0.08,
     niUpperRate: 0.02,
 
-    // Student loan thresholds (corrected for 2024/25)
+    // Pension auto-enrolment reference thresholds
+    aeTrigger: 10000,
+    aeLowerQualifying: 6240,
+    aeUpperQualifying: 50270,
+
+    // Student loan thresholds
     slPlan1Threshold: 24990,
     slPlan2Threshold: 27295,
     slPlan4Threshold: 31395,
-    slPlan5Threshold: null, // Plan 5 not used for 2024/25
+    slPlan5Threshold: null,
     slPostgradThreshold: 21000,
     slPlanRate: 0.09,
     slPostgradRate: 0.06,
@@ -74,23 +122,57 @@ const TAX_YEARS = {
 };
 
 const TAXYEAR_KEY = "wagewiseuk_taxyear_v1";
-let currentTaxYear = "2025/26";
+
+function getSystemDefaultTaxYear(){
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const ukTaxYearStart = new Date(currentYear, 3, 6); // 6 April in local time
+  return now >= ukTaxYearStart ? `${currentYear}/${String(currentYear + 1).slice(-2)}` : `${currentYear - 1}/${String(currentYear).slice(-2)}`;
+}
+
+function getFallbackTaxYear(){
+  return TAX_YEARS[getSystemDefaultTaxYear()] ? getSystemDefaultTaxYear() : "2025/26";
+}
+
+let currentTaxYear = getFallbackTaxYear();
 
 function getTY(){
-  return TAX_YEARS[currentTaxYear] || TAX_YEARS["2025/26"];
+  return TAX_YEARS[currentTaxYear] || TAX_YEARS[getFallbackTaxYear()];
+}
+
+function getTaxYearOptionLabel(year){
+  const systemYear = getSystemDefaultTaxYear();
+  if(year === systemYear) return `${year} (current)`;
+  return year;
+}
+
+function buildTaxYearSelector(){
+  const sel = document.getElementById("taxYear");
+  if(!sel) return;
+
+  const years = Object.keys(TAX_YEARS).sort((a, b) => b.localeCompare(a));
+  sel.innerHTML = '';
+
+  for(const year of years){
+    const opt = document.createElement('option');
+    opt.value = year;
+    opt.textContent = getTaxYearOptionLabel(year);
+    sel.appendChild(opt);
+  }
 }
 
 function applyTaxYearToUI(){
+  buildTaxYearSelector();
+
   const sel = document.getElementById("taxYear");
   if(sel) sel.value = currentTaxYear;
 
-  // Update "Important" copy (index.html)
   const imp = document.getElementById("importantTaxYear");
   if(imp) imp.textContent = currentTaxYear;
 }
 
 function setTaxYear(year){
-  if(!TAX_YEARS[year]) year = "2025/26";
+  if(!TAX_YEARS[year]) year = getFallbackTaxYear();
   currentTaxYear = year;
   try{ localStorage.setItem(TAXYEAR_KEY, currentTaxYear); }catch(e){}
   applyTaxYearToUI();
@@ -374,6 +456,7 @@ function renderResults(b){
 
 function getInputFromUI(){
   const taxYear = document.getElementById('taxYear')?.value || currentTaxYear;
+  if(TAX_YEARS[taxYear] && taxYear !== currentTaxYear) currentTaxYear = taxYear;
   const region = document.getElementById('region').value;
   const mode = document.getElementById('mode').value;
   const preset = (document.getElementById('taxCodePreset')?.value || '1257L').trim();
@@ -921,7 +1004,7 @@ document.getElementById('calcBtn').addEventListener('click', () => { try{ runCal
 document.getElementById('resetBtn').addEventListener('click', () => {
   try{ localStorage.removeItem(LAST_KEY); }catch(e){}
   try{ localStorage.removeItem(TAXYEAR_KEY); }catch(e){}
-  setTaxYear('2025/26');
+  setTaxYear(getFallbackTaxYear());
   resetUI();
   syncModeUI();
   toast('Cleared');
@@ -996,6 +1079,7 @@ wireCopyButtons();
 try{
   const savedTY = localStorage.getItem(TAXYEAR_KEY);
   if(savedTY && TAX_YEARS[savedTY]) currentTaxYear = savedTY;
+  else currentTaxYear = getFallbackTaxYear();
 }catch(e){}
 applyTaxYearToUI();
 wireTaxYearSelector();
