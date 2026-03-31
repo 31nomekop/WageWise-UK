@@ -1,4 +1,4 @@
-const APP_VERSION = "1.5.2";
+const APP_VERSION = "1.5.4";
 // WageWise UK (PWA) — multi-tax-year PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
@@ -376,19 +376,25 @@ function incomeTaxAnnual(region, adjustedNetIncome, taxCode, ty){
   }
 }
 
-function nationalInsuranceAnnual(annualEarnings, ty){
+function nationalInsuranceAnnual(annualEarnings, ty, periods = 12){
   const e = Math.max(0, annualEarnings);
-  const pt = ty.niPrimaryThreshold;
-  const uel = ty.niUpperEarningsLimit;
-  if(e <= pt) return 0;
-  const mainBand = Math.min(e, uel) - pt;
-  const upperBand = Math.max(0, e - uel);
-  return round2(mainBand * ty.niMainRate + upperBand * ty.niUpperRate);
+  if(e <= 0) return 0;
+
+  const periodEarnings = e / periods;
+  const pt = ty.niPrimaryThreshold / periods;
+  const uel = ty.niUpperEarningsLimit / periods;
+
+  if(periodEarnings <= pt) return 0;
+
+  const mainBand = Math.max(0, Math.min(periodEarnings, uel) - pt);
+  const upperBand = Math.max(0, periodEarnings - uel);
+  const perPeriod = round2(mainBand * ty.niMainRate + upperBand * ty.niUpperRate);
+  return round2(perPeriod * periods);
 }
 
-function studentLoanAnnual(plan, annualEarnings, ty){
+function studentLoanAnnual(plan, annualEarnings, ty, periods = 12){
   const e = Math.max(0, annualEarnings);
-  if(plan === 'none') return 0;
+  if(plan === 'none' || e <= 0) return 0;
 
   let threshold = 0;
   let rate = ty.slPlanRate;
@@ -402,30 +408,58 @@ function studentLoanAnnual(plan, annualEarnings, ty){
   }
   if(plan === 'postgraduate'){ threshold = ty.slPostgradThreshold; rate = ty.slPostgradRate; }
 
-  if(e <= threshold) return 0;
-  return round2((e - threshold) * rate);
+  const periodEarnings = e / periods;
+  const periodThreshold = threshold / periods;
+  if(periodEarnings <= periodThreshold) return 0;
+
+  const perPeriod = round2((periodEarnings - periodThreshold) * rate);
+  return round2(perPeriod * periods);
+}
+
+function getPensionMethodFromInput(input){
+  if(input.pensionMethod) return input.pensionMethod;
+  return input.salarySacrifice ? 'salarySacrifice' : 'netPay';
 }
 
 function compute(input){
   const gross = round2(input.grossAnnual);
   const pensionPct = clamp(input.pensionPercent, 0, 100);
-  const pension = round2(gross * (pensionPct / 100));
+  const pensionGross = round2(gross * (pensionPct / 100));
+  const pensionMethod = getPensionMethodFromInput(input);
 
-  const base = Math.max(0, input.salarySacrifice ? (gross - pension) : gross);
+  let taxBase = gross;
+  let niBase = gross;
+  let slBase = gross;
+  let pensionDeductedFromPay = pensionGross;
+
+  if(pensionMethod === 'salarySacrifice'){
+    taxBase = Math.max(0, gross - pensionGross);
+    niBase = Math.max(0, gross - pensionGross);
+    slBase = Math.max(0, gross - pensionGross);
+  } else if(pensionMethod === 'netPay'){
+    taxBase = Math.max(0, gross - pensionGross);
+  } else if(pensionMethod === 'reliefAtSource'){
+    pensionDeductedFromPay = round2(pensionGross * 0.8);
+  }
 
   const ty = getTY();
-  const tax = incomeTaxAnnual(input.region, base, input.taxCode, ty);
-  const ni = nationalInsuranceAnnual(base, ty);
-  const sl = studentLoanAnnual(input.studentLoan, base, ty);
+  const tax = incomeTaxAnnual(input.region, taxBase, input.taxCode, ty);
+  const ni = nationalInsuranceAnnual(niBase, ty);
+  const sl = studentLoanAnnual(input.studentLoan, slBase, ty);
 
-  const net = round2(gross - tax - ni - sl - pension);
+  const net = round2(gross - tax - ni - sl - pensionDeductedFromPay);
 
   return {
     grossAnnual: gross,
     incomeTaxAnnual: tax,
     nationalInsuranceAnnual: ni,
     studentLoanAnnual: sl,
-    pensionAnnual: pension,
+    pensionAnnual: pensionDeductedFromPay,
+    pensionGrossAnnual: pensionGross,
+    pensionMethod,
+    taxablePayAnnual: taxBase,
+    niablePayAnnual: niBase,
+    slablePayAnnual: slBase,
     netAnnual: net,
     netMonthly: round2(net / 12),
     netWeekly: round2(net / 52),
@@ -504,7 +538,7 @@ function renderResults(b){
   el.appendChild(makeRow('Income Tax (annual)', currencyGBP(b.incomeTaxAnnual)));
   el.appendChild(makeRow('National Insurance (annual)', currencyGBP(b.nationalInsuranceAnnual)));
   el.appendChild(makeRow('Student Loan (annual)', currencyGBP(b.studentLoanAnnual)));
-  el.appendChild(makeRow('Pension (annual)', currencyGBP(b.pensionAnnual)));
+  el.appendChild(makeRow(`Pension (${b.pensionMethod === 'reliefAtSource' ? 'annual deducted from pay' : 'annual'})`, currencyGBP(b.pensionAnnual)));
   el.appendChild(makeRow('Take-home (annual)', currencyGBP(b.netAnnual), true));
   el.appendChild(makeRow('Take-home (monthly)', currencyGBP(b.netMonthly), true));
   el.appendChild(makeRow('Take-home (weekly)', currencyGBP(b.netWeekly), true));
@@ -521,7 +555,8 @@ function getInputFromUI(){
   const custom = (document.getElementById('taxCodeCustom')?.value || '').trim();
   const taxCode = normalizeTaxCode(preset === 'custom' ? (custom || '1257L') : (preset || '1257L'));
   const pensionPercent = parseMoney(document.getElementById('pensionPercent').value) ?? 0;
-  const salarySacrifice = document.getElementById('salarySacrifice').checked;
+  const pensionMethod = document.getElementById('pensionMethod')?.value || 'netPay';
+  const salarySacrifice = pensionMethod === 'salarySacrifice';
   const studentLoan = document.getElementById('studentLoan').value;
 
   let grossAnnual = 0;
@@ -533,7 +568,7 @@ function getInputFromUI(){
     grossAnnual = hourlyRate * hoursPerWeek * 52;
   }
 
-  return { taxYear, region, mode, taxCode, pensionPercent, salarySacrifice, studentLoan, grossAnnual };
+  return { taxYear, region, mode, taxCode, pensionPercent, pensionMethod, salarySacrifice, studentLoan, grossAnnual };
 }
 
 function syncModeUI(){
@@ -644,7 +679,7 @@ function validateAllInputs(){
 // Salary Finder
 function sfSolveGrossFromNet(targetNetAnnual, assumptions){
   // Binary search gross salary so compute() netAnnual matches target net.
-  // assumptions: {region,taxCode,pensionPercent,salarySacrifice,studentLoan}
+  // assumptions: {region,taxCode,pensionPercent,pensionMethod,salarySacrifice,studentLoan}
   let lo = 0, hi = 300000;
 
   // If the target is high, expand the search range until we bracket it (or hit a sensible cap).
@@ -655,6 +690,7 @@ function sfSolveGrossFromNet(targetNetAnnual, assumptions){
       region: assumptions.region,
       taxCode: assumptions.taxCode,
       pensionPercent: assumptions.pensionPercent,
+      pensionMethod: assumptions.pensionMethod || (assumptions.salarySacrifice ? 'salarySacrifice' : 'netPay'),
       salarySacrifice: assumptions.salarySacrifice,
       studentLoan: assumptions.studentLoan
     });
@@ -670,6 +706,7 @@ function sfSolveGrossFromNet(targetNetAnnual, assumptions){
       region: assumptions.region,
       taxCode: assumptions.taxCode,
       pensionPercent: assumptions.pensionPercent,
+      pensionMethod: assumptions.pensionMethod || (assumptions.salarySacrifice ? 'salarySacrifice' : 'netPay'),
       salarySacrifice: assumptions.salarySacrifice,
       studentLoan: assumptions.studentLoan
     });
@@ -714,6 +751,7 @@ function sfEstimate(){
   const baseAssumptions = {
     region: calc.region,
     pensionPercent: calc.pensionPercent,
+    pensionMethod: calc.pensionMethod,
     salarySacrifice: calc.salarySacrifice,
     studentLoan: calc.studentLoan
   };
@@ -792,7 +830,7 @@ const SC_KEY = 'wagewiseuk_scenarios_v1';
 function loadScenarios(){ try{ return JSON.parse(localStorage.getItem(SC_KEY) || '{}'); } catch(e){ return {}; } }
 function saveScenarios(obj){ localStorage.setItem(SC_KEY, JSON.stringify(obj || {})); }
 function getScenarioState(){
-  const ids = ['taxYear','region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCodePreset','taxCodeCustom','pensionPercent','salarySacrifice','studentLoan','sfFrequency','sfMode','sfP1','sfP2','sfP3','sfP4'];
+  const ids = ['taxYear','region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCodePreset','taxCodeCustom','pensionPercent','pensionMethod','studentLoan','sfFrequency','sfMode','sfP1','sfP2','sfP3','sfP4'];
   const state = {};
   for(const id of ids){
     const el = document.getElementById(id);
@@ -804,7 +842,13 @@ function getScenarioState(){
 function applyScenarioState(state){
   if(!state) return;
   if(state.taxYear) setTaxYear(String(state.taxYear));
-  Object.entries(state).forEach(([id,val]) => {
+
+  const compatState = { ...state };
+  if(!compatState.pensionMethod){
+    compatState.pensionMethod = compatState.salarySacrifice ? 'salarySacrifice' : 'netPay';
+  }
+
+  Object.entries(compatState).forEach(([id,val]) => {
     const el = document.getElementById(id);
     if(!el) return;
     if(el.type === 'checkbox') el.checked = !!val;
@@ -901,7 +945,7 @@ function buildShareSummary(){
     `Take-home (monthly): ${currencyGBP(lastResult.netMonthly)}`,
     `Take-home (weekly): ${currencyGBP(lastResult.netWeekly)}`,
     `Tax: ${currencyGBP(lastResult.incomeTaxAnnual)} • NI: ${currencyGBP(lastResult.nationalInsuranceAnnual)} • SL: ${currencyGBP(lastResult.studentLoanAnnual)} • Pension: ${currencyGBP(lastResult.pensionAnnual)}`,
-    `Region: ${input.region} • Tax code: ${input.taxCode} • Student loan: ${input.studentLoan}`
+    `Region: ${input.region} • Tax code: ${input.taxCode} • Student loan: ${input.studentLoan} • Pension: ${input.pensionMethod || (input.salarySacrifice ? 'salary sacrifice' : 'net pay')}`
   ].join('\n');
 }
 
@@ -986,7 +1030,8 @@ function resetUI(){
   if(tcPreset) tcPreset.value='1257L';
   if(tcCustom) tcCustom.value='';
   document.getElementById('pensionPercent').value = '';
-  document.getElementById('salarySacrifice').checked = false;
+  const pm = document.getElementById('pensionMethod');
+  if(pm) pm.value = 'netPay';
   document.getElementById('studentLoan').value = 'none';
   sfClear();
   document.getElementById('results').innerHTML = '<div class="hint">Enter your details and tap <strong>Calculate</strong>.</div>';
@@ -1047,7 +1092,7 @@ function wireViewSwitcher(){
 // Wire events
 document.getElementById('mode').addEventListener('change', () => { syncModeUI(); validateAllInputs(); scheduleAutoCalc(); });
 
-['region','annualSalary','hourlyRate','hoursPerWeek','taxCode','pensionPercent','salarySacrifice','studentLoan'].forEach(id => {
+['region','annualSalary','hourlyRate','hoursPerWeek','taxCode','pensionPercent','pensionMethod','studentLoan'].forEach(id => {
   const el = document.getElementById(id);
   if(!el) return;
   el.addEventListener('input', scheduleAutoCalc);
@@ -1175,7 +1220,7 @@ wireShareButton();
 // save last-used inputs while typing (covers both tabs)
 [
   'taxYear','region','mode','annualSalary','hourlyRate','hoursPerWeek','taxCodePreset','taxCodeCustom','pensionPercent',
-  'salarySacrifice','studentLoan','sfFrequency','sfMode','sfP1','sfP2','sfP3','sfP4'
+  'pensionMethod','studentLoan','sfFrequency','sfMode','sfP1','sfP2','sfP3','sfP4'
 ].forEach(id => {
   const el = document.getElementById(id);
   if(!el) return;

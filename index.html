@@ -65,13 +65,14 @@
             <div class="fieldError" id="err_pensionPercent" aria-live="polite"></div>
           </label>
 
-          <label class="toggle">
-            <input id="salarySacrifice" type="checkbox" />
-            <div>
-              <strong>Salary sacrifice pension</strong>
-              <div class="sub">If enabled, pension reduces Income Tax, NI, and Student Loan bases.
-              <div class="helpText" id="help_salarySac" hidden>Only enable if your workplace pension is set up as <strong>salary sacrifice</strong>. If unsure, leave it off.</div></div>
-            </div>
+          <label class="field">
+            <span>Pension method <button class="helpBtn" type="button" data-help="help_pensionMethod" aria-label="Help: Pension method">i</button></span>
+            <select id="pensionMethod">
+              <option value="netPay">Net pay arrangement</option>
+              <option value="salarySacrifice">Salary sacrifice</option>
+              <option value="reliefAtSource">Relief at source</option>
+            </select>
+            <div class="helpText" id="help_pensionMethod" hidden><strong>Net pay</strong> reduces Income Tax only. <strong>Salary sacrifice</strong> reduces Income Tax, NI and Student Loan bases. <strong>Relief at source</strong> usually deducts 80% from your pay and pension tax relief is added by the provider.</div>
           </label>
         </div>
 
@@ -319,6 +320,6 @@
   </footer>
 
   <!-- Cache-bust app.js so iOS Safari picks up updates quickly -->
-  <script src="app.js?v=1.5.2"></script>
+  <script src="app.js?v=1.5.4"></script>
 </body>
 </html>
