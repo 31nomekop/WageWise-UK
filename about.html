@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>About • WageWise UK</title>
+  <meta name="theme-color" content="#10141c" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="info-page">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark"><img src="icon-v2.png" alt="WageWise UK logo"></div>
+      <div>
+        <h1>WageWise UK</h1>
+        <p>About</p>
+      </div>
+    </div>
+    <div class="tabs">
+      <a class="pill ghost back-link" href="index.html">Back</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>About</h2>
+<p class="fine">WageWise UK is a simple take-home pay estimator for UK PAYE. Use it to estimate your net pay from an annual salary or hourly wage, and to estimate annual salary from recent payslips.</p>
+<h2>Who it’s for</h2>
+<p class="fine">Anyone paid through PAYE who wants a clearer, quicker estimate of take-home pay — especially if you work variable hours or get paid weekly/fortnightly.</p>
+<h2>What it doesn’t do</h2>
+<p class="fine">WageWise UK provides estimates only. Real payslips can differ due to payroll periods, employer benefits, tax code adjustments, pension rules and other deductions.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="footer-version"></div>
+    <nav class="footerLinks" aria-label="Footer links">
+      <a href="about.html">About</a>
+      <span aria-hidden="true">•</span>
+      <a href="privacy.html">Privacy</a>
+      <span aria-hidden="true">•</span>
+      <a href="disclaimer.html">Disclaimer</a>
+    </nav>
+  </footer>
+
+  
+  <script>
+    (function(){
+      var el = document.querySelector('.footer-version');
+      if(!el) return;
+      fetch('app.js', {cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+        var m = t.match(/APP_VERSION\s*=\s*"([^"]+)"/);
+        if(m) el.textContent = 'WageWise UK • v' + m[1];
+      }).catch(function(){});
+    })();
+  </script>
+
+</body>
+</html>

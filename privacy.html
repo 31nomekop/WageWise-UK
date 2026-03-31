@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Privacy • WageWise UK</title>
+  <meta name="theme-color" content="#10141c" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="info-page">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark"><img src="icon-v2.png" alt="WageWise UK logo"></div>
+      <div>
+        <h1>WageWise UK</h1>
+        <p>Privacy</p>
+      </div>
+    </div>
+    <div class="tabs">
+      <a class="pill ghost back-link" href="index.html">Back</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>Privacy</h2>
+<p class="fine"><strong>Local by default:</strong> WageWise UK runs in your browser. Your inputs are processed on your device to produce estimates.</p>
+<p class="fine"><strong>No accounts:</strong> There is no sign-in and we do not ask for personal details.</p>
+<p class="fine"><strong>Saved scenarios:</strong> If you use saved scenarios, they are stored locally in your browser storage on this device. They are not uploaded anywhere.</p>
+<p class="fine"><strong>Changes:</strong> If privacy-related behaviour changes in a future update, this page will be updated.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="footer-version"></div>
+    <nav class="footerLinks" aria-label="Footer links">
+      <a href="about.html">About</a>
+      <span aria-hidden="true">•</span>
+      <a href="privacy.html">Privacy</a>
+      <span aria-hidden="true">•</span>
+      <a href="disclaimer.html">Disclaimer</a>
+    </nav>
+  </footer>
+
+  
+  <script>
+    (function(){
+      var el = document.querySelector('.footer-version');
+      if(!el) return;
+      fetch('app.js', {cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+        var m = t.match(/APP_VERSION\s*=\s*"([^"]+)"/);
+        if(m) el.textContent = 'WageWise UK • v' + m[1];
+      }).catch(function(){});
+    })();
+  </script>
+
+</body>
+</html>
