@@ -1,4 +1,4 @@
-const CACHE = "wagewiseuk-v1.5.2-taxcode-plan5-fixes";
+const CACHE = "wagewiseuk-v1.5.3-ui-tighten";
 const ASSETS = [
   './',
   './index.html',
