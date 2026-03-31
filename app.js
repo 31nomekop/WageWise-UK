@@ -568,6 +568,8 @@ function toast(msg){
 }
 
 // ===== Inline validation (light layer) =====
+let hasAttemptedCalc = false;
+
 function setFieldError(inputId, errId, msg){
   const input = document.getElementById(inputId);
   const err = document.getElementById(errId);
@@ -938,6 +940,7 @@ function scheduleAutoCalc(){
 }
 
 function runCalculation(){
+  hasAttemptedCalc = true;
   const input = getInputFromUI();
   const el = document.getElementById('results');
   const showError = (msg) => { if(el) el.innerHTML = `<div class="hint">${msg}</div>`; };
@@ -972,6 +975,7 @@ function runCalculation(){
 
 // Reset
 function resetUI(){
+  hasAttemptedCalc = false;
   document.getElementById('region').value = 'england';
   document.getElementById('mode').value = 'annualSalary';
   document.getElementById('annualSalary').value = '';
