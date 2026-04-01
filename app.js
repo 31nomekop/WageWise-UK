@@ -638,7 +638,6 @@ function validateAllInputs(){
     ['pensionPercent','err_pensionPercent'],
     ['hourlyRate','err_hourlyRate'],
     ['hoursPerWeek','err_hoursPerWeek'],
-    ['taxCodeCustom','err_taxCodeCustom'],
     ['sfP1','err_sfP1'],
     ['sfP2','err_sfP2'],
     ['sfP3','err_sfP3'],
@@ -647,7 +646,7 @@ function validateAllInputs(){
 
   const mode = document.getElementById('mode')?.value || 'annualSalary';
 
-  // Calculator validation (light layer while typing: only flag malformed entered values)
+  // Calculator validation (only validate visible mode while typing)
   if(mode === 'annualSalary'){
     const v = readNonNegNumber('annualSalary');
     if(!v.blank && !v.ok) setFieldError('annualSalary','err_annualSalary','Enter a valid annual salary.');
@@ -671,13 +670,6 @@ function validateAllInputs(){
   }
 
   // Salary Finder validation (only if values are entered)
-  ['sfP1','sfP2','sfP3','sfP4'].forEach(id => {
-    const v = readNonNegNumber(id);
-    if(!v.blank && !v.ok) setFieldError(id, 'err_' + id, 'Enter a valid gross pay amount.');
-  });
-}
-
-// Salary Finder validation (only if values are entered)
   ['sfP1','sfP2','sfP3','sfP4'].forEach(id => {
     const v = readNonNegNumber(id);
     if(!v.blank && !v.ok) setFieldError(id, 'err_' + id, 'Enter a valid gross pay amount.');
@@ -997,23 +989,48 @@ function runCalculation(){
   const el = document.getElementById('results');
   const showError = (msg) => { if(el) el.innerHTML = `<div class="hint">${msg}</div>`; };
 
-  // Inline validation on submit
+  // Light validation first (format/range). Required-field errors are only shown on Calculate.
   validateAllInputs();
 
-  if(input.mode === 'annualSalary' && (!input.grossAnnual || input.grossAnnual <= 0)){
-    setFieldError('annualSalary','err_annualSalary','Annual salary is required.');
-    showError('Enter an annual salary to calculate.');
-    lastResult = null;
-    updateUxExtras({grossAnnual:0,incomeTaxAnnual:0,nationalInsuranceAnnual:0,studentLoanAnnual:0,pensionAnnual:0,netAnnual:0});
-    return;
+  if(input.mode === 'annualSalary'){
+    const annualRaw = String(document.getElementById('annualSalary')?.value ?? '').trim();
+    if(annualRaw === ''){
+      setFieldError('annualSalary','err_annualSalary','Annual salary is required.');
+      showError('Enter an annual salary to calculate.');
+      lastResult = null;
+      updateUxExtras({grossAnnual:0,incomeTaxAnnual:0,nationalInsuranceAnnual:0,studentLoanAnnual:0,pensionAnnual:0,netAnnual:0});
+      return;
+    }
+    if(!input.grossAnnual || input.grossAnnual <= 0){
+      setFieldError('annualSalary','err_annualSalary','Enter a valid annual salary.');
+      showError('Enter a valid annual salary to calculate.');
+      lastResult = null;
+      updateUxExtras({grossAnnual:0,incomeTaxAnnual:0,nationalInsuranceAnnual:0,studentLoanAnnual:0,pensionAnnual:0,netAnnual:0});
+      return;
+    }
   }
+
   if(input.mode !== 'annualSalary'){
-    const hr = parseMoney(document.getElementById('hourlyRate').value);
-    const hrs = parseMoney(document.getElementById('hoursPerWeek').value);
+    const hrRaw = String(document.getElementById('hourlyRate')?.value ?? '').trim();
+    const hrsRaw = String(document.getElementById('hoursPerWeek')?.value ?? '').trim();
+    const hr = parseMoney(hrRaw);
+    const hrs = parseMoney(hrsRaw);
+
+    if(hrRaw === '' || hrsRaw === ''){
+      if(hrRaw === '') setFieldError('hourlyRate','err_hourlyRate','Hourly rate is required.');
+      if(hrsRaw === '') setFieldError('hoursPerWeek','err_hoursPerWeek','Hours per week is required.');
+      showError(hrRaw === '' && hrsRaw === ''
+        ? 'Enter an hourly rate and hours per week to calculate.'
+        : (hrRaw === '' ? 'Enter an hourly rate to calculate.' : 'Enter hours per week to calculate.'));
+      lastResult = null;
+      updateUxExtras({grossAnnual:0,incomeTaxAnnual:0,nationalInsuranceAnnual:0,studentLoanAnnual:0,pensionAnnual:0,netAnnual:0});
+      return;
+    }
+
     if(!(hr > 0 && hrs > 0)){
-      if(!(hr > 0)) setFieldError('hourlyRate','err_hourlyRate','Hourly rate is required.');
-      if(!(hrs > 0)) setFieldError('hoursPerWeek','err_hoursPerWeek','Hours per week is required.');
-      showError('Enter an hourly rate and hours per week to calculate.');
+      if(!(hr > 0)) setFieldError('hourlyRate','err_hourlyRate','Enter a valid hourly rate.');
+      if(!(hrs > 0)) setFieldError('hoursPerWeek','err_hoursPerWeek','Enter valid hours per week.');
+      showError('Enter a valid hourly rate and hours per week to calculate.');
       lastResult = null;
       updateUxExtras({grossAnnual:0,incomeTaxAnnual:0,nationalInsuranceAnnual:0,studentLoanAnnual:0,pensionAnnual:0,netAnnual:0});
       return;
@@ -1107,7 +1124,7 @@ document.getElementById('mode').addEventListener('change', () => { syncModeUI();
   el.addEventListener('change', scheduleAutoCalc);
 });
 
-// light inline validation (clear stale errors / flag malformed entered values)
+// live inline validation
 ['annualSalary','hourlyRate','hoursPerWeek','pensionPercent','sfP1','sfP2','sfP3','sfP4'].forEach(id => {
   const el = document.getElementById(id);
   if(!el) return;

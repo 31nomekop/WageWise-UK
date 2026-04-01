@@ -1,4 +1,4 @@
-const CACHE = "wagewiseuk-v1.5.4.1-wording-validation-fix";
+const CACHE = "wagewiseuk-v1.5.4.1-hotfix-1";
 const ASSETS = [
   './',
   './index.html',
