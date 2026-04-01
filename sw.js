@@ -1,4 +1,4 @@
-const CACHE = "wagewiseuk-v1.5.4-accuracy-candidate";
+const CACHE = "wagewiseuk-v1.5.4.1-wording-validation-fix";
 const ASSETS = [
   './',
   './index.html',

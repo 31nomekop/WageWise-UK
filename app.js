@@ -638,6 +638,7 @@ function validateAllInputs(){
     ['pensionPercent','err_pensionPercent'],
     ['hourlyRate','err_hourlyRate'],
     ['hoursPerWeek','err_hoursPerWeek'],
+    ['taxCodeCustom','err_taxCodeCustom'],
     ['sfP1','err_sfP1'],
     ['sfP2','err_sfP2'],
     ['sfP3','err_sfP3'],
@@ -646,7 +647,7 @@ function validateAllInputs(){
 
   const mode = document.getElementById('mode')?.value || 'annualSalary';
 
-  // Calculator validation (only validate visible mode while typing)
+  // Calculator validation (light layer while typing: only flag malformed entered values)
   if(mode === 'annualSalary'){
     const v = readNonNegNumber('annualSalary');
     if(!v.blank && !v.ok) setFieldError('annualSalary','err_annualSalary','Enter a valid annual salary.');
@@ -670,6 +671,13 @@ function validateAllInputs(){
   }
 
   // Salary Finder validation (only if values are entered)
+  ['sfP1','sfP2','sfP3','sfP4'].forEach(id => {
+    const v = readNonNegNumber(id);
+    if(!v.blank && !v.ok) setFieldError(id, 'err_' + id, 'Enter a valid gross pay amount.');
+  });
+}
+
+// Salary Finder validation (only if values are entered)
   ['sfP1','sfP2','sfP3','sfP4'].forEach(id => {
     const v = readNonNegNumber(id);
     if(!v.blank && !v.ok) setFieldError(id, 'err_' + id, 'Enter a valid gross pay amount.');
@@ -1003,8 +1011,8 @@ function runCalculation(){
     const hr = parseMoney(document.getElementById('hourlyRate').value);
     const hrs = parseMoney(document.getElementById('hoursPerWeek').value);
     if(!(hr > 0 && hrs > 0)){
-      setFieldError('hourlyRate','err_hourlyRate','Hourly rate is required.');
-      setFieldError('hoursPerWeek','err_hoursPerWeek','Hours per week is required.');
+      if(!(hr > 0)) setFieldError('hourlyRate','err_hourlyRate','Hourly rate is required.');
+      if(!(hrs > 0)) setFieldError('hoursPerWeek','err_hoursPerWeek','Hours per week is required.');
       showError('Enter an hourly rate and hours per week to calculate.');
       lastResult = null;
       updateUxExtras({grossAnnual:0,incomeTaxAnnual:0,nationalInsuranceAnnual:0,studentLoanAnnual:0,pensionAnnual:0,netAnnual:0});
@@ -1099,7 +1107,7 @@ document.getElementById('mode').addEventListener('change', () => { syncModeUI();
   el.addEventListener('change', scheduleAutoCalc);
 });
 
-// live inline validation
+// light inline validation (clear stale errors / flag malformed entered values)
 ['annualSalary','hourlyRate','hoursPerWeek','pensionPercent','sfP1','sfP2','sfP3','sfP4'].forEach(id => {
   const el = document.getElementById(id);
   if(!el) return;
