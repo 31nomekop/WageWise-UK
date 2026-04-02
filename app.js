@@ -1,4 +1,4 @@
-const APP_VERSION = "1.5.4";
+const APP_VERSION = "1.5.4.2";
 // WageWise UK (PWA) — multi-tax-year PAYE estimator (single-file, GitHub Pages friendly)
 
 // Splash fade-out (keeps first paint clean on slower phones)
@@ -631,18 +631,23 @@ function readNonNegNumber(inputId){
   return { ok:true, n:n, blank:false };
 }
 
-function validateAllInputs(){
-  // clear everything first
+function clearAllValidationState(){
   [
     ['annualSalary','err_annualSalary'],
     ['pensionPercent','err_pensionPercent'],
     ['hourlyRate','err_hourlyRate'],
     ['hoursPerWeek','err_hoursPerWeek'],
+    ['taxCodeCustom','err_taxCodeCustom'],
     ['sfP1','err_sfP1'],
     ['sfP2','err_sfP2'],
     ['sfP3','err_sfP3'],
     ['sfP4','err_sfP4'],
   ].forEach(([i,e]) => setFieldError(i,e,''));
+}
+
+function validateAllInputs(){
+  // clear everything first
+  clearAllValidationState();
 
   const mode = document.getElementById('mode')?.value || 'annualSalary';
 
@@ -839,8 +844,25 @@ function getScenarioState(){
   }
   return state;
 }
-function applyScenarioState(state){
+function canAutoCalculateFromCurrentUI(){
+  const mode = document.getElementById('mode')?.value || 'annualSalary';
+  const isAnnual = mode === 'annualSalary';
+
+  if(isAnnual){
+    const annual = parseMoney(document.getElementById('annualSalary')?.value);
+    return annual != null && annual > 0;
+  }
+
+  const hr = parseMoney(document.getElementById('hourlyRate')?.value);
+  const hrs = parseMoney(document.getElementById('hoursPerWeek')?.value);
+  return hr != null && hr > 0 && hrs != null && hrs > 0;
+}
+
+function applyScenarioState(state, options = {}){
   if(!state) return;
+  const autoCalculateMode = options.autoCalculateMode || 'always';
+  const isStartupRestore = !!options.isStartupRestore;
+
   if(state.taxYear) setTaxYear(String(state.taxYear));
 
   const compatState = { ...state };
@@ -854,10 +876,23 @@ function applyScenarioState(state){
     if(el.type === 'checkbox') el.checked = !!val;
     else el.value = String(val);
   });
+
   syncStudentLoanUI();
   syncModeUI();
-  validateAllInputs();
-  document.getElementById('calcBtn').click();
+
+  if(isStartupRestore){
+    hasAttemptedCalc = false;
+    clearAllValidationState();
+    validateAllInputs();
+  } else {
+    validateAllInputs();
+  }
+
+  const canCalc = canAutoCalculateFromCurrentUI();
+  const shouldCalc = autoCalculateMode === 'always' || (autoCalculateMode === 'ifComplete' && canCalc);
+  if(shouldCalc && canCalc){
+    document.getElementById('calcBtn')?.click();
+  }
 }
 function refreshScenarioUI(){
   const sel = document.getElementById('scenarioSelect');
@@ -897,7 +932,7 @@ function wireScenarioButtons(){
   loadBtn.addEventListener('click', () => {
     const key = sel.value;
     if(!key) return toast('Select a scenario');
-    applyScenarioState(loadScenarios()[key]);
+    applyScenarioState(loadScenarios()[key], { autoCalculateMode: 'always' });
     toast('Scenario loaded');
   });
   delBtn.addEventListener('click', () => {
@@ -1045,6 +1080,7 @@ function runCalculation(){
 // Reset
 function resetUI(){
   hasAttemptedCalc = false;
+  clearAllValidationState();
   document.getElementById('region').value = 'england';
   document.getElementById('mode').value = 'annualSalary';
   document.getElementById('annualSalary').value = '';
@@ -1233,7 +1269,7 @@ if (footerVersion) {
 // Auto-restore last used inputs (if present)
 const last = loadLastState();
 if(last){
-  applyScenarioState(last);
+  applyScenarioState(last, { autoCalculateMode: 'ifComplete', isStartupRestore: true });
 } else {
   // ensure at least one clean validation pass on first load
   validateAllInputs();
